@@ -1,6 +1,7 @@
 #include<iostream> 
 #include<Eigen/Dense>
 #include<Eigen/Eigenvalues>
+#include "include/sqstrain.h"
 #define N 2 
 
 //using Eigen::MatrixXd, Eigen::Matrix2d; 
@@ -21,6 +22,6 @@ int main()
   	std::cout << "Eigenvalues are : " << std::endl << 
   					eigvals << std::endl;
   	std::cout << "eigvals[0] = " << eigvals[0] << std::endl; 
-
+  	std::cout<< "Output of testfunc : " << test_func() << std::endl;
 	return (0); 
 }
