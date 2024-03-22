@@ -10,7 +10,8 @@ a = 2.46 #Angstrom
 acc = 1.42 #Angstrom
 
 
-epsA1 = 0
+## energy quantities in units of eV
+epsA1 = 0 
 deltaprime = 0.022
 epsA2 = deltaprime
 epsB1 = deltaprime
@@ -35,10 +36,15 @@ def Ham_BLG(k):
 	return np.array(ham)
 
 
-kxrange = np.linspace(-np.pi, np.pi, 20)
-kyrange = np.linspace(-np.pi, np.pi, 20)
+kxrange = np.linspace(-np.pi, np.pi, 200)
+kyrange = np.linspace(-np.pi, np.pi, 200)
 
-Elist = np.array([eigvals(Ham_BLG(k)) for k in zip(kxrange,kyrange)]).real
+
+
+
+
+Elist = np.array([eigvals(Ham_BLG((kx,ky))) 
+	for kx in kxrange for ky in kyrange]).real.reshape(len(kxrange),len(kyrange),4)
 
 
 
@@ -48,19 +54,25 @@ Elist = np.array([eigvals(Ham_BLG(k)) for k in zip(kxrange,kyrange)]).real
 
 ###### tests ##########
 
+def contourplot():
+	fig = plt.contour(kxrange,kyrange,Elist[:,:,2], levels = 200)
+	plt.colorbar()
+	plt.show()
 
 def test_elist():
-	print(Elist)
+	print(Elist.shape)
 
 def test_hermiticity():
 	kvec = np.array([np.pi/2, np.pi/3])
 	np.testing.assert_almost_equal(Ham_BLG(kvec) , np.conj(Ham_BLG(kvec).T))
-	print('passed test_hermiticity')
+	return True 
+
 
 def main():
 	test_hermiticity()
-	test_elist()
+	contourplot()
 
 
 if __name__ == '__main__':
 	main()
+
