@@ -3,7 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.linalg import eigvals
+from scipy.linalg import eigvals, eigvalsh
 
 
 a = 2.46 #Angstrom
@@ -36,15 +36,19 @@ def Ham_BLG(k):
 	return np.array(ham)
 
 
-kxrange = np.linspace(-np.pi, np.pi, 200)
-kyrange = np.linspace(-np.pi, np.pi, 200)
+kxrange = np.linspace(-1.5*np.pi, 1.5*np.pi, 100)
+kyrange = np.linspace(-1.5*np.pi, 1.5*np.pi, 100)
 
 
 
 
+grid = np.array([(kx,ky) for kx in kxrange for ky in kyrange])
+#grid =  np.meshgrid(kxrange,kyrange)
 
-Elist = np.array([eigvals(Ham_BLG((kx,ky))) 
-	for kx in kxrange for ky in kyrange]).real.reshape(len(kxrange),len(kyrange),4)
+
+Elist = np.array([eigvalsh(Ham_BLG(vec)) for vec in grid]).T
+#Elist = np.array([eigvalsh(Ham_BLG((kx,ky))) for kx in kxrange for ky in kyrange]).real
+
 
 
 
@@ -55,12 +59,18 @@ Elist = np.array([eigvals(Ham_BLG((kx,ky)))
 ###### tests ##########
 
 def contourplot():
-	fig = plt.contour(kxrange,kyrange,Elist[:,:,2], levels = 200)
+	band_idx = 2 # 2 is the first positive energy band
+	Z = Elist[band_idx].reshape(len(kxrange),len(kyrange))
+	levels = [0,0.0008,0.0009,0.001,0.002]
+	fig = plt.contour(kxrange,kyrange,Z, levels = 100)
 	plt.colorbar()
 	plt.show()
 
 def test_elist():
+	#print(grid)
 	print(Elist.shape)
+	print(Elist[2].reshape(len(kxrange),len(kyrange)))
+
 
 def test_hermiticity():
 	kvec = np.array([np.pi/2, np.pi/3])
@@ -70,6 +80,7 @@ def test_hermiticity():
 
 def main():
 	test_hermiticity()
+	#test_elist()
 	contourplot()
 
 
