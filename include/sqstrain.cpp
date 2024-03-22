@@ -6,9 +6,10 @@ using Eigen::MatrixXd;
 int test_func(unsigned int N)
 {	
 	MatrixXd m(N,N) ; 
+	int num = 5; 
 	m << 1,3,2,3 ; 
 	std::cout << m << std::endl;
-	return 69; 
+	return num; 
 }
 
 /* Need to check if objects are return by reference by default 
@@ -28,11 +29,17 @@ void make_null(Eigen::MatrixXd* matrixPtr)
         std::cerr << "Invalid pointer!" << std::endl;
         return;
     }
-    for(size_t i =0 ; i<matrixPtr->rows(); i++)
-    	for (size_t j=0 ; j< matrixPtr->cols(); j++) 
+    for(auto i = 0 ; i<matrixPtr->rows(); i++)
+    	for (auto j=0 ; j< matrixPtr->cols(); j++) 
     		(*matrixPtr) (i,j) = 0;
     //matrixPtr->setZero();
 }
 
 
+MatrixXd make_ham(int size)
+{
+	MatrixXd ham(size, size); 
+	ham.setRandom(size,size);
+	return ham;
+}
 
