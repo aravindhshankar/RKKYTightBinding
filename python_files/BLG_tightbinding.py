@@ -39,6 +39,11 @@ def Ham_BLG(k):
 kxrange = np.linspace(-1.5*np.pi, 1.5*np.pi, 100)
 kyrange = np.linspace(-1.5*np.pi, 1.5*np.pi, 100)
 
+# kxrange = np.linspace(1, 1.5*np.pi, 400)
+# kyrange = np.linspace(2, 1.5*np.pi, 400)
+
+
+
 
 
 
@@ -52,17 +57,15 @@ Elist = np.array([eigvalsh(Ham_BLG(vec)) for vec in grid]).T
 
 
 
-
-
-
-
 ###### tests ##########
 
 def contourplot():
 	band_idx = 2 # 2 is the first positive energy band
 	Z = Elist[band_idx].reshape(len(kxrange),len(kyrange))
 	levels = [0,0.0008,0.0009,0.001,0.002]
-	fig = plt.contour(kxrange,kyrange,Z, levels = 100)
+	#levels = np.linspace(0,0.02,100)
+	levels = 100
+	fig = plt.contour(kxrange,kyrange,Z, levels = levels)
 	plt.colorbar()
 	plt.show()
 
@@ -77,10 +80,17 @@ def test_hermiticity():
 	np.testing.assert_almost_equal(Ham_BLG(kvec) , np.conj(Ham_BLG(kvec).T))
 	return True 
 
+def test_listcomp():
+	A = [1,2,3]
+	B = [11,12,13]
+	listcom = [(a,b) for a in A for b in B]
+	print(listcom)
+
 
 def main():
 	test_hermiticity()
 	#test_elist()
+	#test_listcomp()
 	contourplot()
 
 
