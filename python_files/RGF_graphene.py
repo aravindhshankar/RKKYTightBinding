@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.linalg import eigvals, eigvalsh
+import matplotlib.pyplot as plt
 
 def main():
 	epsB = 0.
@@ -16,25 +18,25 @@ def main():
 				}
 
 	def ret_H0(kx,t,a,epsA,epsB):
-		P = np.matrix([[0,0,0,-np.conj(t)*np.exp(-1j*kx*a)],[0,0,0,0],[0,0,0,0],[-t*np.exp(1j*kx*a),0,0,0]]) 
-		M = np.matrix([[epsB,-np.conj(t),0,0],[-t,epsA,-t,0],[0,-np.conj(t),epsB,-t],[0,0,-np.conj(t),epsA]])
+		P = np.array([[0,0,0,-np.conj(t)*np.exp(-1j*kx*a)],[0,0,0,0],[0,0,0,0],[-t*np.exp(1j*kx*a),0,0,0]]) 
+		M = np.array([[epsB,-np.conj(t),0,0],[-t,epsA,-t,0],[0,-np.conj(t),epsB,-t],[0,0,-np.conj(t),epsA]])
 		return M + P
 
-	Q = np.matrix([[0,-t,0,0],[-np.conj(t),0,0,0],[0,0,0,-np.conj(t)],[0,0,-t,0]])
-	Ty = np.matrix([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
+	Q = np.array([[0,-t,0,0],[-np.conj(t),0,0,0],[0,0,0,-np.conj(t)],[0,0,-t,0]])
+	Ty = np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
 	# H0 = ret_H0(kx,**kwargs)
 
-	np.testing.assert_almost_equal(Q,Q.H)
+	np.testing.assert_almost_equal(Q,Q.conj().T)
 
 	omega = 0.1
-	G0invarr = [(omega - ret_H0(kx,**kwargs)).I for kx in kxvals]
+	G0invarr = [np.linalg.inv(omega - ret_H0(kx,**kwargs)) for kx in kxvals]
 	#G = np.linalg.inv(G0inv) #Initialize G to G0
-	Garr = [G0inv.I for G0inv in G0invarr]
+	Garr = [np.linalg.inv(G0inv) for G0inv in G0invarr]
 	#Garr = map(np.linalg.inv,G0invarr)
 	itern = 10
 	for i in range(itern):
 		for i,G in enumerate(Garr):
-			Garr[i] = np.linalg.inv(G0invarr[i] - Ty@G@Ty.H)
+			Garr[i] = np.linalg.inv(G0invarr[i] - Ty@G@Ty.conj().T)
 	print(Garr)
 
 
