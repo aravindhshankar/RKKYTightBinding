@@ -12,7 +12,7 @@ def main():
 	#kxvals = np.linspace(0,2*np.pi/a,10)
 	kxvals = (kx,)
 	#omega = 0.001
-	delta = 0.01
+	delta = 0.001
 	omegavals = np.linspace(-3.5,3.5,1000) 
 	#omegavals = (omega,)
 
@@ -44,10 +44,8 @@ def main():
 	fig,ax = plt.subplots(1)
 	for itern in range(RECURSIONS):
 		Garr = np.linalg.inv(G0invarr - Ty@Garr@Tydag)
-		# DOS = (-1./np.pi) * Garr[:,0,0,0].imag
-		# ax.plot(omegavals,DOS,label=str(itern))
 	DOS = (-1./np.pi) * Garr[:,0,0,0].imag
-	#np.testing.assert_equal(len(omegavals),len(DOS))
+	np.testing.assert_equal(len(omegavals),len(DOS))
 	plt.plot(omegavals,DOS)
 	#ax.legend()
 	#ax.set_ylim(-1,1)
