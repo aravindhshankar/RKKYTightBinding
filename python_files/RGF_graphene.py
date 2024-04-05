@@ -13,7 +13,7 @@ def main():
 	kxvals = (kx,)
 	#omega = 0.001
 	delta = 0.001
-	omegavals = np.linspace(-3.5,3.5,100) 
+	omegavals = np.linspace(-3.5,3.5,10000) 
 	#omegavals = (omega,)
 
 	kwargs = {  't':t, 
@@ -33,24 +33,24 @@ def main():
 	# H0 = ret_H0(kx,**kwargs)
 	np.testing.assert_almost_equal(Q,Q.conj().T)
 	dimH = 4
-	G0invarr = np.array([np.linalg.inv(omega + 1j*delta - ret_H0(kx,**kwargs)) 
+	G0invarr = np.array([(omega + 1j*delta)*np.eye(4) - ret_H0(kx,**kwargs) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	#First index is omega index i.e. G0invarr[0] contains G0inv(omega=0, kx) for all kx
 	Garr = np.linalg.inv(G0invarr) #Initialize G to G0
-	print(G0invarr.shape, Garr.shape)
-	print((G0invarr[0,0]@Garr[0,0]).real)
+	# print(G0invarr.shape, Garr.shape)
+	# print((G0invarr[0,0]@Garr[0,0]).real)
 	Tydag = Ty.conj().T
-	RECURSIONS = 6
+	RECURSIONS = 500
 	fig,ax = plt.subplots(1)
 	for itern in range(RECURSIONS):
 		Garr = np.linalg.inv(G0invarr - Ty@Garr@Tydag)
-		DOS = (-1./np.pi) * Garr[:,0,0,0].imag
-		ax.plot(omegavals,DOS,label=str(itern))
+		# DOS = (-1./np.pi) * Garr[:,0,0,0].imag
+		# ax.plot(omegavals,DOS,label=str(itern))
 	DOS = (-1./np.pi) * Garr[:,0,0,0].imag
 	#np.testing.assert_equal(len(omegavals),len(DOS))
-	# plt.plot(omegavals,DOS)
-	ax.legend()
-	ax.set_ylim(-1,1)
+	plt.plot(omegavals,DOS)
+	#ax.legend()
+	#ax.set_ylim(-1,1)
 	plt.show()
 
 if __name__ == '__main__': 
