@@ -44,9 +44,6 @@ kyrange = np.linspace(-1.5*np.pi, 1.5*np.pi, 100)
 
 
 
-
-
-
 grid = np.array([(kx,ky) for kx in kxrange for ky in kyrange])
 #grid =  np.meshgrid(kxrange,kyrange)
 
@@ -61,7 +58,7 @@ Elist = np.array([eigvalsh(Ham_BLG(vec)) for vec in grid]).T
 
 def contourplot():
 	band_idx = 2 # 2 is the first positive energy band
-	Z = Elist[band_idx].reshape(len(kxrange),len(kyrange))
+	Z = Elist[band_idx].reshape((len(kxrange),len(kyrange))) #Changed
 	levels = [0,0.0008,0.0009,0.001,0.002]
 	#levels = np.linspace(0,0.02,100)
 	levels = 100

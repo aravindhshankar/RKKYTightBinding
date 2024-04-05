@@ -25,20 +25,19 @@ def main():
 	Q = np.array([[0,-t,0,0],[-np.conj(t),0,0,0],[0,0,0,-np.conj(t)],[0,0,-t,0]])
 	Ty = np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
 	# H0 = ret_H0(kx,**kwargs)
-
 	np.testing.assert_almost_equal(Q,Q.conj().T)
-
-	omega = 0.1
-	G0invarr = [np.linalg.inv(omega - ret_H0(kx,**kwargs)) for kx in kxvals]
-	#G = np.linalg.inv(G0inv) #Initialize G to G0
-	Garr = [np.linalg.inv(G0inv) for G0inv in G0invarr]
-	#Garr = map(np.linalg.inv,G0invarr)
-	itern = 10
-	for i in range(itern):
-		for i,G in enumerate(Garr):
-			Garr[i] = np.linalg.inv(G0invarr[i] - Ty@G@Ty.conj().T)
+	dimH = 4
+	omega = 0.001
+	omegavals = np.linspace(0,0.01,5)
+	G0invarr = np.array([np.linalg.inv(omega - ret_H0(kx,**kwargs)) 
+					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
+	#First index is omega index i.e. G0invarr[0] contains G0inv(omega=0, kx) for all kx
+	Garr = np.linalg.inv(G0inv) #Initialize G to G0
+	Tydag = Ty.conj().T
+	RECURSIONS = 10
+	for itern in range(RECURSIONS):
+		Garr = np.linalg.inv(G0invarr - Ty@Garr@(Tydag))
 	print(Garr)
-
 
 if __name__ == '__main__': 
 	main()
