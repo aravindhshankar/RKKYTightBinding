@@ -13,7 +13,7 @@ def main():
 	kxvals = (kx,)
 	#omega = 0.001
 	delta = 0.001
-	omegavals = np.linspace(-3.5,3.5,1000) 
+	omegavals = np.linspace(-3.1,3.1,2000) 
 	#omegavals = (omega,)
 
 	kwargs = {  't':t, 
@@ -40,15 +40,17 @@ def main():
 	# print(G0invarr.shape, Garr.shape)
 	# print((G0invarr[0,0]@Garr[0,0]).real)
 	Tydag = Ty.conj().T
-	RECURSIONS = 10000 #So far, this is just the recursive method : not yet Fast recursion
+	RECURSIONS = 20000 #So far, this is just the recursive method : not yet Fast recursion
 	fig,ax = plt.subplots(1)
 	for itern in range(RECURSIONS):
 		Garr = np.linalg.inv(G0invarr - Ty@Garr@Tydag)
-	DOS = (-1./np.pi) * Garr[:,0,0,0].imag
+	Gfull = np.linalg.inv(np.linalg.inv(Garr) - Ty@Garr@Tydag)
+	# DOS = (-1./np.pi) * Garr[:,0,0,0].imag
+	DOS = (-1./np.pi) * Gfull[:,0,0,0].imag
 	np.testing.assert_equal(len(omegavals),len(DOS))
 	plt.plot(omegavals,DOS)
 	#ax.legend()
-	#ax.set_ylim(-1,1)
+	ax.set_ylim(0,2.2)
 	plt.show()
 
 if __name__ == '__main__': 
