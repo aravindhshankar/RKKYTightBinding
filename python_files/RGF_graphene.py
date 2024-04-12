@@ -2,6 +2,9 @@ import numpy as np
 from scipy.linalg import eigvals, eigvalsh
 import matplotlib.pyplot as plt
 
+######### Benchmarked semi inf chain with andrew's notebook ########
+######### inf chain still has some finite size artifacts 
+######### sites [3,3] and [4,4] of andrew's notebook correspond to our [0,0] index in semi inf chani
 def main():
 	epsB = 0.
 	epsA = 0.
@@ -41,17 +44,42 @@ def main():
 	# print((G0invarr[0,0]@Garr[0,0]).real)
 	Tydag = Ty.conj().T
 	RECURSIONS = 20000 #So far, this is just the recursive method : not yet Fast recursion
-	fig,ax = plt.subplots(1)
 	for itern in range(RECURSIONS):
 		Garr = np.linalg.inv(G0invarr - Ty@Garr@Tydag)
 	Gfull = np.linalg.inv(np.linalg.inv(Garr) - Ty@Garr@Tydag)
-	# DOS = (-1./np.pi) * Garr[:,0,0,0].imag
-	DOS = (-1./np.pi) * Gfull[:,0,0,0].imag
-	np.testing.assert_equal(len(omegavals),len(DOS))
-	plt.plot(omegavals,DOS)
-	#ax.legend()
-	ax.set_ylim(0,2.2)
+	DOSend0 = (-1./np.pi) * Garr[:,0,0,0].imag
+	DOSfull0 = (-1./np.pi) * Gfull[:,0,0,0].imag
+	DOSend1 = (-1./np.pi) * Garr[:,0,1,1].imag
+	DOSfull1 = (-1./np.pi) * Gfull[:,0,1,1].imag
+	np.testing.assert_equal(len(omegavals),len(DOSend0))
+	np.testing.assert_equal(len(omegavals),len(DOSfull1))
+
+	fig, ax = plt.subplots(2)
+	fig.suptitle(f'Recursions = {RECURSIONS}')
+	ax[0].plot(omegavals,DOSend0,label='index 0')
+	ax[0].plot(omegavals,DOSend1,label='index 1')
+	ax[0].set_ylim(0,2.2)
+	ax[0].set_title('DOSend')
+	ax[0].legend()
+
+	ax[1].plot(omegavals,DOSfull0,label='index 0')
+	ax[1].plot(omegavals,DOSfull1,label='index 1')
+	ax[1].set_ylim(0,2.2)
+	ax[1].set_title('DOSfull')
+	ax[1].legend()
+
+
 	plt.show()
 
 if __name__ == '__main__': 
 	main()
+
+
+
+
+
+
+
+
+
+
