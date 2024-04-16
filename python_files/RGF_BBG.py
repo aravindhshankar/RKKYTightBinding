@@ -2,6 +2,8 @@ import numpy as np
 from scipy.linalg import eigvals, eigvalsh
 import matplotlib.pyplot as plt
 
+## Maybe you want to rewrite this section as data members of a class that you can inherit from
+## Or even add these data quantities to a separate module which can be imported
 
 ## energy quantities in units of eV
 epsA1 = 0 
@@ -14,6 +16,16 @@ gamma1 = 0.381
 gamma3 = 0.38
 gamma4 = 0.14
 
+kwargs = {  'epsA1': epsA1, 
+			'epsA1': epsA1,
+			'epsA2': epsA2,
+			'epsB1': epsB1, 
+			'epsB2': epsB2,
+			'gamma0': gamma0, 
+			'gamma1': gamma1, 
+			'gamma3': gamma3, 
+			'gamma4': gamma4
+			}
 
 
 def f(k):
@@ -28,11 +40,67 @@ def Ham_BLG(k):
 			[-gamma3*f(k), gamma4*np.conj(f(k)), -gamma0*np.conj(f(k)), epsB2] ]
 	return np.array(ham)
 
+def ret_H0(kx,**kwargs):
+	Tx = np.zeros((8,8))
+	Tx[0,5] = -kwargs['gamma3']
+	Tx[0,6] = -kwargs['gamma0']
+	Tx[0,7] = kwargs['gamma4']
+	Tx[2,5] = kwargs['gamma4']
+	Tx[3,5] = -kwargs['gamma0']
+	Tx = Tx * np.exp(-1j*kx)
+	#P = Tx + Tx.conj().T
+
+	#Horrible code ahead : please don't judge
+
+	M = np.zeros((8,8))
+	M[0,0] = kwargs['epsB2']
+	M[0,1] = -kwargs['gamma3']
+	M[0,2] = -kwargs['gamma0']
+	M[0,3] = kwargs['gamma1']
+	M[1,1] = kwargs['epsA1']
+	M[1,2] = kwargs['gamma4']
+	M[1,3] = -kwargs['gamma0']
+	M[1,4] = -kwargs['gamma3']
+	M[1,6] = kwargs['gamma4']
+	M[1,7] = -kwargs['gamma0']
+	M[2,2] = kwargs['epsA2']
+	M[2,3] = kwargs['gamma1']
+	M[2,4] = -kwargs['gamma0']
+	M[3,3] = kwargs['epsB1']
+	M[3,4] = kwargs['gamma4']
+	M[4,4] = kwargs['epsB2']
+	M[4,5] = -kwargs['gamma3']
+	M[4,6] = -kwargs['gamma0']
+	M[4,7] = kwargs['gamma4']
+	M[5,5] = kwargs['epsA1']
+	M[5,6] = kwargs['gamma4']
+	M[5,7] = -kwargs['gamma0']
+	M[6,6] = kwargs['epsA2']
+	M[6,7] = kwargs['gamma1']
+	M[7,7] = kwargs['epsB1']
+	M = M + Tx
+	M = M + M.conj().T - np.diag(np.diag(M))
+
+	return M 
+
+
+def ret_Ty(kx,**kwargs):
+	# non-hermitian : only couples along -ve y direction
+	Ty = np.zeros((8,8))
+	Ty[0,2] = -kwargs['gamma0']
+	Ty[0,3] = kwargs['gamma4']
+	Ty[0,5] = -kwargs['gamma3'] * np.exp(-1j*kx)
+	Ty[1,2] = kwargs['gamma4']
+	Ty[1,3] = -kwargs['gamma0']
+	Ty[1,4] = -kwargs['gamma3']
+	Ty[6,4] = -kwargs['gamma0']
+	Ty[6,5] = kwargs['gamma4']
+	Ty[7,4] = kwargs['gamma4']
+	Ty[7,5] = -kwargs['gamma0']
+
+
+
 def main():
-	epsB = 0.
-	epsA = 0.
-	t = 1. 
-	a = 1. 
 	#kx = 2*np.pi/a * 0.1 
 	kx = 0.5/a
 	#kxvals = np.linspace(0,2*np.pi/a,10)
@@ -42,20 +110,9 @@ def main():
 	omegavals = np.linspace(-3.1,3.1,2000) 
 	#omegavals = (omega,)
 
-	kwargs = {  't':t, 
-				'a':a,
-				'epsA': epsA,
-				'epsB': epsB 
-				}
+	
 
-	def ret_H0(kx,t,a,epsA,epsB):
-		P = np.array([[0,0,0,-np.conj(t)*np.exp(-1j*kx*a)],[0,0,0,0],[0,0,0,0],[-t*np.exp(1j*kx*a),0,0,0]]) 
-		np.testing.assert_almost_equal(P,P.conj().T)
-		M = np.array([[epsB,-np.conj(t),0,0],[-t,epsA,-t,0],[0,-np.conj(t),epsB,-t],[0,0,-np.conj(t),epsA]])
-		return M + P
-
-	Q = np.array([[0,-t,0,0],[-np.conj(t),0,0,0],[0,0,0,-np.conj(t)],[0,0,-t,0]])
-	Ty = np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
+	#Ty = np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
 	# H0 = ret_H0(kx,**kwargs)
 	np.testing.assert_almost_equal(Q,Q.conj().T)
 	dimH = 4
@@ -63,8 +120,7 @@ def main():
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	#First index is omega index i.e. G0invarr[0] contains G0inv(omega=0, kx) for all kx
 	Garr = np.linalg.inv(G0invarr) #Initialize G to G0
-	# print(G0invarr.shape, Garr.shape)
-	# print((G0invarr[0,0]@Garr[0,0]).real)
+
 	Tydag = Ty.conj().T
 	RECURSIONS = 20000 #So far, this is just the recursive method : not yet Fast recursion
 	for itern in range(RECURSIONS):
@@ -76,6 +132,20 @@ def main():
 	DOSfull1 = (-1./np.pi) * Gfull[:,0,1,1].imag
 	np.testing.assert_equal(len(omegavals),len(DOSend0))
 	np.testing.assert_equal(len(omegavals),len(DOSfull1))
+
+
+
+
+
+
+
+
+
+
+
+
+
+	################## Plotting #############################
 
 	fig, ax = plt.subplots(2)
 	fig.suptitle(f'Recursions = {RECURSIONS}')

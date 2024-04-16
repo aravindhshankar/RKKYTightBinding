@@ -29,5 +29,10 @@ def m2():
 	np.testing.assert_almost_equal(Tmat@A, A@Tmat)
 	print('test passed!')
 
+def m3():
+	M = np.array([[1,2],[3,4]])
+	print(np.diag(np.diag(M)))
+
 if __name__ == '__main__':
-	m2()
+	m3()
+
