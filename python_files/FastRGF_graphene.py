@@ -65,7 +65,7 @@ def fastrecG(omega,kx,**kwargs):
 
 
 def main():
-
+	print(ret_H0(0,**kwargs))
 	kx = 0.5/a
 	# kxvals = np.linspace(0,2*np.pi/a,1000)
 	kxvals = np.linspace(-np.pi/a,np.pi/a,1000)
