@@ -116,9 +116,9 @@ def recG(omega, kx, kwargs, RECURSIONS=20, delta = 0.001):
 	for itern in range(RECURSIONS):
 		G = np.linalg.inv(G0inv - Ty@G@Tydag) #Notice how this adds one extra site at a time
 	Gfull = np.linalg.inv(np.linalg.inv(G) - Ty@G@Tydag)
-	DOSend = (-1./np.pi) * G.imag
-	DOSfull = (-1./np.pi) * Gfull.imag
-	return DOSend, DOSfull
+	DOSend = (-1./np.pi) * np.diag(G.imag)
+	DOSfull = (-1./np.pi) * np.diag(Gfull.imag)
+	return (DOSend, DOSfull)
 
 
 
@@ -155,12 +155,14 @@ def boilerplate():
 
 
 def main(): 
-	RECURSIONS = 20000
-	omega = 0.1
-	kx = 0.5
-	DOSend,DOSfull = recG(omega,kx,kwargs,RECURSIONS=RECURSIONS)
-	print(np.diag(DOSfull))
-	exit(0)
+	RECURSIONS = 2000
+	omega = 0.001 #units of eV
+	kxvals = np.linspace(0,0.1,1000)
+	DOS = np.array([recG(omega,kx,kwargs,RECURSIONS=RECURSIONS) for kx in kxvals])
+	DOSend = DOS[:,0]
+	DOSfull = DOS[:,1]
+	#print(np.diag(DOSfull))
+	#exit(0)
 
 
 
@@ -174,20 +176,22 @@ def main():
 	################## Plotting #############################
 
 	fig, ax = plt.subplots(2)
-	fig.suptitle(f'Recursions = {RECURSIONS}')
-	ax[0].plot(omegavals,DOSend[0,0],label='index 0')
-	ax[0].plot(omegavals,DOSend[1,1],label='index 1')
-	ax[0].set_ylim(0,2.2)
+	fig.suptitle(f'Recursions = {RECURSIONS}, $\\omega$ = {omega:.4}')
+	ax[0].plot(kxvals,DOSend[:,0],label='index 0')
+	ax[0].plot(kxvals,DOSend[:,1],label='index 1')
+	#ax[0].set_ylim(0,2.2)
 	ax[0].set_title('DOSend')
+	ax[0].set_xlabel('kx')
 	ax[0].legend()
 
-	ax[1].plot(omegavals,DOSfull[0,0],label='index 0')
-	ax[1].plot(omegavals,DOSfull[1,1],label='index 1')
-	ax[1].set_ylim(0,2.2)
+	ax[1].plot(kxvals,DOSfull[:,0],label='index 0')
+	ax[1].plot(kxvals,DOSfull[:,1],label='index 1')
+	#ax[1].set_ylim(0,2.2)
 	ax[1].set_title('DOSfull')
+	ax[1].set_xlabel('kx')
 	ax[1].legend()
 
-
+	fig.tight_layout()
 	plt.show()
 
 if __name__ == '__main__': 
