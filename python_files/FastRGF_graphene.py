@@ -55,17 +55,11 @@ def fastrecG(omega,kx,**kwargs):
 		T = T + tprod@tnf
 		tprod = tprod@tnb
 	Gn = np.linalg.inv(G0inv - Ty@T)
+	G = Gn
 	# G = np.linalg.inv(np.linalg.inv(G) - Ty@G@Tydag)
-	G = np.linalg.inv(np.linalg.inv(G) - Tydag@G@Ty) #couple other way around
+	#G = np.linalg.inv(np.linalg.inv(G) - Tydag@G@Ty) #couple other way around
 
 	return G
-
-
-
-	
-
-
-
 
 
 
@@ -73,7 +67,8 @@ def fastrecG(omega,kx,**kwargs):
 def main():
 
 	kx = 0.5/a
-	kxvals = np.linspace(0,2*np.pi/a,1000)
+	# kxvals = np.linspace(0,2*np.pi/a,1000)
+	kxvals = np.linspace(-np.pi/a,np.pi/a,1000)
 	# kxvals = (kx,)
 	omega = 0.4
 	delta = 0.0001
@@ -81,6 +76,8 @@ def main():
 	# omegavals = np.linspace(-1.5,1.5, 200)
 	#omegavals = [0.001,0.005,0.01,0.05,0.1,0.5,1,1.5]
 	omegavals = (omega,)
+	omegavals = np.linspace(0.001,2,4)
+	omegavals = (0.002,0.01,0.07,0.3,0.9,1.4,2.8)
 	err = 1e-1
 	dimH = 4
 	#R = np.arange(0,500)
@@ -90,13 +87,14 @@ def main():
 
 
 
-	DOS0 = (-1./np.pi) * G[0,:,0,0].imag
-	DOS1 = (-1./np.pi) * G[0,:,1,1].imag
+	DOS0 = (-1./np.pi) * G[:,:,0,0].imag
+	DOS1 = (-1./np.pi) * G[:,:,1,1].imag
 	# np.testing.assert_equal(len(kxvals),len(DOSend0))
 	# np.testing.assert_equal(len(kxvals),len(DOSfull1))
 
-	peaks = [find_peaks(DOS0[i,:],prominence=0.1*np.max(DOS0))[0] for i in range(len(omegavals))]
-
+	peaks = [find_peaks(DOS0[i,:],prominence=0.1*np.max(DOS0[i,:]))[0] for i in range(len(omegavals))]
+	print(len(peaks))
+	print(peaks)
 	# GR0 = np.array([(0.5/np.pi)*simpson(np.exp(-1j * kxvals * R[0])*DOSfull0[i,:], kxvals) for i in range(len(omegavals))])
 	# GR0 = np.array([0.5/np.pi*simpson(np.exp(-1j*0)*DOS0, kxvals])
 
@@ -110,41 +108,22 @@ def main():
 
 
 	#################PLOTTING######################
-	fig, ax = plt.subplots(2)
+	NUMPLOTS = len(omegavals)
+	assert NUMPLOTS < 10 , "TOO MANY PLOTS"
+	fig, ax = plt.subplots(NUMPLOTS)
 	#fig.suptitle(f'Recursions = {RECURSIONS}, kx = {kx:.3}')
-	# ax[0].plot(omegavals,DOS0[],label='index 0')
-	# ax[0].plot(omegavals,DOS1,label='index 1')
-	# ax[0].set_ylim(0,2.2)
-	# ax[0].set_title('DOSend')
-	# ax[0].set_xlabel('$\\omega$')
-	# ax[0].legend()
-
-	# ax[1].plot(omegavals,DOS0,label='index 0')
-	# ax[1].plot(omegavals,DOS1,label='index 1')
-	# ax[1].set_ylim(0,2.2)
-	# ax[1].set_title('DOSfull')
-	# ax[1].set_xlabel('$\\omega$')
-	# ax[1].legend()
-
-	#fig.suptitle(f'Recursions = {RECURSIONS}, $\\omega = $ {omega:.3}')
-	ax[0].plot(kxvals,DOS0,label='index 0')
-	ax[0].plot(kxvals,DOS1,label='index 1')
-	#ax[0].set_ylim(0,2.2)
-	ax[0].set_title('DOSend')
-	ax[0].set_xlabel('kx')
-	ax[0].legend()
-
-	ax[1].plot(kxvals,DOS0[:],label='index 0')
-	ax[1].plot(kxvals,DOS1[:],label='index 1')
-	#ax[1].set_ylim(0,2.2)
-	ax[1].set_title('DOSfull')
-	ax[1].set_xlabel('$kx')
-	for peak in peaks:
-		ax[1].axvline(kxvals[peak],ls='--')
-	ax[1].legend()
+	for i,omega in enumerate(omegavals):
+		ax[i].plot(kxvals,DOS0[i,:],label='index 0')
+		ax[i].plot(kxvals,DOS1[i,:],label='index 1')
+		#ax[i].set_ylim(0,2.2)
+		ax[i].set_title(f'$\\omega$ = {omega:.3}')
+		ax[i].set_xlabel('$k_x$')
+		for peak in peaks[i]:
+			ax[i].axvline(kxvals[peak],ls='--',c='k')
+		ax[i].legend()
 
 
-	fig.tight_layout()
+	# fig.tight_layout()
 	
 	# fig, ax = plt.subplots(1)
 	# ax.plot(R,GR0,'.-')
