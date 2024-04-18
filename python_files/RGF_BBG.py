@@ -155,7 +155,7 @@ def boilerplate():
 
 
 def main(): 
-	RECURSIONS = 2000
+	RECURSIONS = 20000
 	omega = 0.001 #units of eV
 	kxvals = np.linspace(0,0.1,1000)
 	DOS = np.array([recG(omega,kx,kwargs,RECURSIONS=RECURSIONS) for kx in kxvals])
