@@ -100,7 +100,30 @@ def ret_Ty(kx,**kwargs):
 
 
 
-def main():
+def recG(omega, kx, kwargs, RECURSIONS=20, delta = 0.001):
+	''' 
+	Takes a single omega and a single kx and returns the greens function at the end of the chain
+	So far, only the naive simple recursive process is implemented
+	'''
+	dimH = 8
+	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs)
+	G = np.linalg.inv(G0invarr) #Initialize G to G0
+
+	Ty = ret_Ty(kx,**kwargs)
+	Tydag = Ty.conj().T
+	for itern in range(RECURSIONS):
+		G = np.linalg.inv(G0inv - Ty@G@Tydag) #Notice how this adds one extra site at a time
+	Gfull = np.linalg.inv(np.linalg.inv(G) - Ty@G@Tydag)
+	DOSend = (-1./np.pi) * G.imag
+	DOSfull = (-1./np.pi) * Gfull.imag
+	np.testing.assert_equal(len(omegavals),len(DOSend0))
+	np.testing.assert_equal(len(omegavals),len(DOSfull1))
+	return DOSend, DOSfull
+
+
+
+
+def boilerplate():
 	#kx = 2*np.pi/a * 0.1 
 	kx = 0.5/a
 	#kxvals = np.linspace(0,2*np.pi/a,10)
@@ -110,13 +133,9 @@ def main():
 	omegavals = np.linspace(-3.1,3.1,2000) 
 	#omegavals = (omega,)
 
-	
-
-	#Ty = np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
-	# H0 = ret_H0(kx,**kwargs)
 	np.testing.assert_almost_equal(Q,Q.conj().T)
-	dimH = 4
-	G0invarr = np.array([(omega + 1j*delta)*np.eye(4) - ret_H0(kx,**kwargs) 
+	dimH = 8
+	G0invarr = np.array([(omega + 1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	#First index is omega index i.e. G0invarr[0] contains G0inv(omega=0, kx) for all kx
 	Garr = np.linalg.inv(G0invarr) #Initialize G to G0
@@ -135,6 +154,12 @@ def main():
 
 
 
+def main(): 
+	RECURSIONS = 20
+	omega = 0.1
+	kx = 0.5
+	 = recG(omega,kx,kwargs,RECURSIONS=RECURSIONS)
+	print(G0inv)
 
 
 
@@ -149,14 +174,14 @@ def main():
 
 	fig, ax = plt.subplots(2)
 	fig.suptitle(f'Recursions = {RECURSIONS}')
-	ax[0].plot(omegavals,DOSend0,label='index 0')
-	ax[0].plot(omegavals,DOSend1,label='index 1')
+	ax[0].plot(omegavals,DOSend[0,0],label='index 0')
+	ax[0].plot(omegavals,DOSend[1,1],label='index 1')
 	ax[0].set_ylim(0,2.2)
 	ax[0].set_title('DOSend')
 	ax[0].legend()
 
-	ax[1].plot(omegavals,DOSfull0,label='index 0')
-	ax[1].plot(omegavals,DOSfull1,label='index 1')
+	ax[1].plot(omegavals,DOSfull[0,0],label='index 0')
+	ax[1].plot(omegavals,DOSfull[1,1],label='index 1')
 	ax[1].set_ylim(0,2.2)
 	ax[1].set_title('DOSfull')
 	ax[1].legend()
