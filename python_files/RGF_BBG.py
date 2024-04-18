@@ -86,7 +86,7 @@ def ret_H0(kx,**kwargs):
 
 def ret_Ty(kx,**kwargs):
 	# non-hermitian : only couples along -ve y direction
-	Ty = np.zeros((8,8))
+	Ty = np.zeros((8,8),dtype = complex)
 	Ty[0,2] = -kwargs['gamma0']
 	Ty[0,3] = kwargs['gamma4']
 	Ty[0,5] = -kwargs['gamma3'] * np.exp(-1j*kx)
@@ -98,6 +98,8 @@ def ret_Ty(kx,**kwargs):
 	Ty[7,4] = kwargs['gamma4']
 	Ty[7,5] = -kwargs['gamma0']
 
+	return Ty
+
 
 
 def recG(omega, kx, kwargs, RECURSIONS=20, delta = 0.001):
@@ -107,7 +109,7 @@ def recG(omega, kx, kwargs, RECURSIONS=20, delta = 0.001):
 	'''
 	dimH = 8
 	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs)
-	G = np.linalg.inv(G0invarr) #Initialize G to G0
+	G = np.linalg.inv(G0inv) #Initialize G to G0
 
 	Ty = ret_Ty(kx,**kwargs)
 	Tydag = Ty.conj().T
@@ -116,8 +118,6 @@ def recG(omega, kx, kwargs, RECURSIONS=20, delta = 0.001):
 	Gfull = np.linalg.inv(np.linalg.inv(G) - Ty@G@Tydag)
 	DOSend = (-1./np.pi) * G.imag
 	DOSfull = (-1./np.pi) * Gfull.imag
-	np.testing.assert_equal(len(omegavals),len(DOSend0))
-	np.testing.assert_equal(len(omegavals),len(DOSfull1))
 	return DOSend, DOSfull
 
 
@@ -155,11 +155,12 @@ def boilerplate():
 
 
 def main(): 
-	RECURSIONS = 20
+	RECURSIONS = 20000
 	omega = 0.1
 	kx = 0.5
-	 = recG(omega,kx,kwargs,RECURSIONS=RECURSIONS)
-	print(G0inv)
+	DOSend,DOSfull = recG(omega,kx,kwargs,RECURSIONS=RECURSIONS)
+	print(np.diag(DOSfull))
+	exit(0)
 
 
 
