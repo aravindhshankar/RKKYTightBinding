@@ -1,9 +1,9 @@
 .DS_Store
-.h5
-.pdf
-.jpg
-.png
-.pyc
-.npy
-.npz
+*.h5
+*.pdf
+*.jpg
+*.png
+*.pyc
+*.npy
+*.npz
 
