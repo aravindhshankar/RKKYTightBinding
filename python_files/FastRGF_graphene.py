@@ -8,6 +8,7 @@ from functools import partial
 import time 
 import multiprocessing as mp
 from h5_handler import *
+import concurrent.futures
 
 
 epsB = 0.
@@ -343,10 +344,36 @@ def test_LDOS():
 	plt.show()
 
 
+def test_LDOS_threads():
+	'''
+	Even slower lol
+	'''
+	omegavals = np.linspace(0,3.1,20)
+	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	# LDOS = quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals
+	startmp = time.time()
+	with concurrent.futures.ThreadPoolExecutor() as pool:
+		LDOS = list(pool.map(helper_LDOS, omegavals))
+	stopmp = time.time()
+	elapsedmp = stopmp-startmp
+	print(f'Parallel computation with Threading finished in time {elapsedmp} seconds')
+	
+	savedict = {'omegavals' : omegavals,
+				'LDOS' : LDOS,
+				'INFO' : '[0,0] site of -1/pi Im G'
+				}
+
+	fig,ax = plt.subplots(1)
+	ax.plot(omegavals, LDOS, label = 'quad LDOS')
+	ax.axvline(1., ls='--', c='grey')
+	ax.set_xlabel('omega')
+	ax.set_title('Graphene LDOS A site')
+	plt.show()
+
 if __name__ == '__main__': 
 	# main()
 	# test_Ginfkx() #show lifshitz transition in spectral weight
-	test_LDOS()
+	test_LDOS_threads()
 
 
 
