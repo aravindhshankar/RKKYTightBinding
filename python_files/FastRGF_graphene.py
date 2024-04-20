@@ -281,14 +281,31 @@ def test_Ginfkx():
 
 	plt.show()
 
-def test_integrate():
+def compare_integrate():
+	omega = 0.995
+	omegavals = (omega,)
+	kxvals = np.linspace(-np.pi,np.pi,2000)
+	delta = 0.0001
+	dimH = 4
+	G = np.array([fastrecGfull(omega,kx,**kwargs) 
+					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
+	DOS = np.array([-1./np.pi * G[0,:,i,i].imag for i in range(dimH)]) 
+	integrand = DOS[0] #-ImG(kx), we're doing now the LDOS
+	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+
+	simpsint = simpson(integrand,kxvals)
+	quadint = quad(callintegrand, -np.pi,np.pi)
+	print(f'simpson with {len(kxvals)} points = {simpsint:.8}')
+	# print(f'quadint = {quadint:.5}')
+	print('quad = ', quadint)
+
 
 
 
 if __name__ == '__main__': 
 	# main()
-	test_Ginfkx() #show lifshitz transition in spectral weight
-
+	# test_Ginfkx() #show lifshitz transition in spectral weight
+	compare_integrate()
 
 
 
