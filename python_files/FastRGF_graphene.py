@@ -204,15 +204,9 @@ def main():
 	# print(GR0.size)
 
 
-
-
-
-
-
-
 	#################PLOTTING######################
 	NUMPLOTS = len(omegavals)
-	assert NUMPLOTS < 10 , "TOO MANY PLOTS"
+	assert NUMPLOTS < 6 , "TOO MANY PLOTS"
 	fig, ax = plt.subplots(NUMPLOTS)
 	#fig.suptitle(f'Recursions = {RECURSIONS}, kx = {kx:.3}')
 	for i,omega in enumerate(omegavals):
@@ -253,27 +247,47 @@ def test_Ginfomega():
 	kx = 0.5
 	kxvals = (0.5,)
 	delta = 0.0001
-	omegavals = np.linspace(-3.1,3.1,2000) 
+	omegavals = np.linspace(-3.1,3.1,1000) 
 	dimH = 4
 	G = np.array([fastrecGfull(omega,kx,**kwargs) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
-	DOS0 = (-1./np.pi) * G[:,:,0,0].imag
-	DOS2 = (-1./np.pi) * G[:,:,2,2].imag
+	DOS = np.array([-1./np.pi * G[:,0,i,i].imag for i in range(dimH)])
 
 	fig, ax = plt.subplots(1)
-	ax.plot(omegavals, DOS0[:,0], label='index 0')
-	ax.plot(omegavals, DOS2[:,0], label='index 2')
+	for i in range(dimH):
+		ax.plot(omegavals,DOS[i], label=f'index {i}')
 	ax.set_xlabel(r'$\omega$')
 	ax.set_title(f'$k_x$ = {kx:.3}')
 	ax.legend()
 
 	plt.show()
 
+def test_Ginfkx():
+	omega = 0.8
+	omegavals = (omega,)
+	kxvals = np.linspace(-np.pi,np.pi,1000)
+	delta = 0.0001
+	dimH = 4
+	G = np.array([fastrecGfull(omega,kx,**kwargs) 
+					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
+	DOS = np.array([-1./np.pi * G[0,:,i,i].imag for i in range(dimH)])
+
+	fig, ax = plt.subplots(1)
+	for i in range(dimH):
+		ax.plot(kxvals,DOS[i], label=f'index {i}')
+	ax.set_xlabel(r'$k_x$')
+	ax.set_title(f'$\\omega$ = {omega:.3}')
+	ax.legend()
+
+	plt.show()
+
+def test_integrate():
+
 
 
 if __name__ == '__main__': 
 	# main()
-	test_Ginfomega()
+	test_Ginfkx() #show lifshitz transition in spectral weight
 
 
 
