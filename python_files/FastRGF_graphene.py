@@ -307,11 +307,25 @@ def compare_integrate():
 
 
 
+def test_LDOS():
+	'''
+	Use scipy.quad for this
+	'''
+	omegavals = np.linspace(0,3.1,1000)
+	callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	LDOS = np.array([quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals])
+
+	fig,ax = plt.subplots(1)
+	ax.plot(omegavals, LDOS, label = 'quad LDOS')
+	ax.set_xlabel('omega')
+	ax.set_title('Graphene LDOS A site')
+	plt.show()
+
 
 if __name__ == '__main__': 
 	# main()
 	# test_Ginfkx() #show lifshitz transition in spectral weight
-	compare_integrate()
+	test_LDOS()
 
 
 
