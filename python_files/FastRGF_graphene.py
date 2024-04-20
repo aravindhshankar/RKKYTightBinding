@@ -6,7 +6,8 @@ from scipy.linalg import norm
 from scipy.integrate import simpson, quad
 from functools import partial
 import time 
-
+import multiprocessing as mp
+from h5_handler import *
 
 
 epsB = 0.
@@ -306,17 +307,37 @@ def compare_integrate():
 	print('quad = ', quadint, f' finished in {(stopquad - startquad):.8} sec')
 
 
+def helper_LDOS(omega):
+	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	LDOS = quad(callintegrand,-np.pi,np.pi)[0] 
+	return LDOS
+
 
 def test_LDOS():
 	'''
 	Use scipy.quad for this
 	'''
-	omegavals = np.linspace(0,3.1,1000)
-	callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
-	LDOS = np.array([quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals])
+	omegavals = np.linspace(0,3.1,512)
+	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	# LDOS = quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals
+	# PROCESSES = 10
+	PROCESSES = mp.cpu_count()
+	startmp = time.time()
+	with mp.Pool(PROCESSES) as pool:
+		LDOS = pool.map(helper_LDOS, omegavals)
+	stopmp = time.time()
+	elapsedmp = stopmp-startmp
+	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
+	
+	savedict = {'omegavals' : omegavals,
+				'LDOS' : LDOS,
+				'INFO' : '[0,0] site of -1/pi Im G'
+				}
+	dict2h5(savedict,'GrapheneAsiteLDOS.h5', verbose=True)
 
 	fig,ax = plt.subplots(1)
 	ax.plot(omegavals, LDOS, label = 'quad LDOS')
+	ax.axvline(1., ls='--', c='grey')
 	ax.set_xlabel('omega')
 	ax.set_title('Graphene LDOS A site')
 	plt.show()

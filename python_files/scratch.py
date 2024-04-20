@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 from scipy.linalg import eigvals,eigvalsh
+import multiprocessing as mp
 
 def m1():
 	ivals = np.array([1,2,3])
@@ -33,6 +34,18 @@ def m3():
 	M = np.array([[1,2],[3,4]])
 	print(np.diag(np.diag(M)))
 
+def f(x):
+	return x*x
+
+def test_mp():
+	print(f(2))
+	with mp.Pool() as p:
+		A = p.map(f, [1, 2, 3])
+	print(A)
+
+
+
+
 if __name__ == '__main__':
-	m3()
+	test_mp()
 
