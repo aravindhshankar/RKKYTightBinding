@@ -5,6 +5,7 @@ from scipy.signal import find_peaks
 from scipy.linalg import norm
 from scipy.integrate import simpson, quad
 from functools import partial
+import time 
 
 
 
@@ -282,22 +283,27 @@ def test_Ginfkx():
 	plt.show()
 
 def compare_integrate():
-	omega = 0.995
+	omega = 1.
 	omegavals = (omega,)
-	kxvals = np.linspace(-np.pi,np.pi,2000)
+	kxvals = np.linspace(-np.pi,np.pi,1000)
 	delta = 0.0001
 	dimH = 4
+	startsimps = time.time()
 	G = np.array([fastrecGfull(omega,kx,**kwargs) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	DOS = np.array([-1./np.pi * G[0,:,i,i].imag for i in range(dimH)]) 
 	integrand = DOS[0] #-ImG(kx), we're doing now the LDOS
-	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
-
 	simpsint = simpson(integrand,kxvals)
+	stopsimps = time.time()
+
+	startquad = time.time()
+	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
 	quadint = quad(callintegrand, -np.pi,np.pi)
-	print(f'simpson with {len(kxvals)} points = {simpsint:.8}')
+	stopquad = time.time()
+
+	print(f'simpson with {len(kxvals)} points = {simpsint:.8} finished in {(stopsimps-startsimps):.8} sec')
 	# print(f'quadint = {quadint:.5}')
-	print('quad = ', quadint)
+	print('quad = ', quadint, f' finished in {(stopquad - startquad):.8} sec')
 
 
 
