@@ -1,10 +1,11 @@
 import multiprocessing
+import concurrent.futures
 from functools import partial
 
 def square_number(x,y):
     return x ** 2 + y ** 2 
 
-def main():
+def test_mp():
     # Define your list of numbers
     numbers = [1, 2, 3, 4, 5]
 
@@ -20,5 +21,20 @@ def main():
     for num, squared_num in zip(numbers, squared_numbers):
         print(f"{num} squared is {squared_num}")
 
+
+
+def test_thread():
+    # Define your list of numbers
+    numbers = [1, 2, 3, 4, 5]
+
+    # Create a ThreadPoolExecutor object within a context manager
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Map the square_number function to each number in the list using executor.map
+        squared_numbers = list(executor.map(square_number, numbers))
+
+    # Print the original numbers and their squares
+    for num, squared_num in zip(numbers, squared_numbers):
+        print(f"{num} squared is {squared_num}")
+
 if __name__ == "__main__":
-    main()
+    test_thread()
