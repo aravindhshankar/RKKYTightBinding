@@ -9,6 +9,7 @@ import time
 import multiprocessing as mp
 from h5_handler import *
 import concurrent.futures
+from numba import njit
 
 
 epsB = 0.
@@ -23,28 +24,28 @@ kwargs = {  't':t,
 
 
 
-
-def ret_H0(kx, **kwargs): 
+@njit
+def ret_H0(kx): 
 	P = np.array([[0,0,0,-np.conj(t)*np.exp(-1j*kx*a)],[0,0,0,0],[0,0,0,0],[-t*np.exp(1j*kx*a),0,0,0]]) 
-	np.testing.assert_almost_equal(P,P.conj().T)
+	# np.testing.assert_almost_equal(P,P.conj().T)
 	M = np.array([[epsB,-np.conj(t),0,0],[-t,epsA,-t,0],[0,-np.conj(t),epsB,-t],[0,0,-np.conj(t),epsA]])
 	return M + P
 
-
-def ret_Ty(**kwargs):
+@njit
+def ret_Ty():
 	Ty = np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
 	return Ty
 
-def fastrecG(omega,kx,**kwargs):
+def fastrecG(omega,kx):
 	'''
 	Takes a single omega and a single kx 
 	'''
 	dimH = 4
 	RECURSIONS=20
 	delta=0.001
-	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs)
+	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx)
 	G = np.linalg.inv(G0inv) #Initialize G to G0
-	Ty = ret_Ty(**kwargs)
+	Ty = ret_Ty()
 	Tydag = Ty.conj().T
 
 	tnf = G@Tydag
@@ -64,17 +65,17 @@ def fastrecG(omega,kx,**kwargs):
 
 	return G
 
-
-def fastrecGfwd(omega,kx,**kwargs):
+@njit
+def fastrecGfwd(omega,kx):
 	'''
 	Takes a single omega and a single kx 
 	'''
 	dimH = 4
 	RECURSIONS=20
 	delta=0.001
-	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs)
+	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx)
 	G = np.linalg.inv(G0inv) #Initialize G to G0
-	Ty = ret_Ty(**kwargs)
+	Ty = ret_Ty()
 	Tydag = Ty.conj().T
 
 	tnf = G@Tydag
@@ -94,16 +95,17 @@ def fastrecGfwd(omega,kx,**kwargs):
 
 	return G
 
-def fastrecGrev(omega,kx,**kwargs):
+@njit
+def fastrecGrev(omega,kx):
 	'''
 	Takes a single omega and a single kx 
 	'''
 	dimH = 4
 	RECURSIONS=20
 	delta=0.001
-	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs)
+	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx)
 	G = np.linalg.inv(G0inv) #Initialize G to G0
-	Tydag = ret_Ty(**kwargs)
+	Tydag = ret_Ty()
 	Ty = Tydag.conj().T
 
 	tnf = G@Tydag
@@ -124,23 +126,24 @@ def fastrecGrev(omega,kx,**kwargs):
 	return G
 
 
-def fastrecGfull(omega,kx,**kwargs):
-	Ty = ret_Ty(**kwargs)
+@njit
+def fastrecGfull(omega,kx):
+	Ty = ret_Ty()
 	Tydag = Ty.conj().T
-	Gfwd = fastrecGfwd(omega,kx,**kwargs)
-	Grev = fastrecGrev(omega,kx,**kwargs)
+	Gfwd = fastrecGfwd(omega,kx)
+	Grev = fastrecGrev(omega,kx)
 	G = np.linalg.inv(np.linalg.inv(Grev) - Ty@Gfwd@Tydag)
 	return G
 
-def fastrecAndrew(omega,kx,**kwargs):
+def fastrecAndrew(omega,kx):
 	dimH = 4
 	RECURSIONS=20
 	delta=0.001
 	Pauli1 = np.array([[0,1],[1,0]])
 	G0inv2x2 = (omega+1j*delta)*np.eye(2) + t*Pauli1
-	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx,**kwargs)
+	G0inv = (omega+1j*delta)*np.eye(dimH) - ret_H0(kx)
 	G = np.linalg.inv(G0inv) #Initialize G to G0
-	Ty = ret_Ty(**kwargs)
+	Ty = ret_Ty()
 	Tydag = Ty.conj().T
 
 	tnf = G@Tydag
@@ -164,7 +167,7 @@ def fastrecAndrew(omega,kx,**kwargs):
 
 
 def main():
-	print(ret_H0(0,**kwargs))
+	print(ret_H0(0))
 	kx = 0.5/a
 	# kxvals = np.linspace(0,2*np.pi/a,1000)
 	kxvals = np.linspace(-np.pi/a,np.pi/a,1000)
@@ -182,19 +185,16 @@ def main():
 	dimH = 4
 	#R = np.arange(0,500)
 	R = (0,)
-	G = np.array([fastrecGfull(omega,kx,**kwargs) 
+	G = np.array([fastrecGfull(omega,kx) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 
-	GAndrew = np.array([fastrecAndrew(omega,kx,**kwargs) 
-					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),2,2))
 
 
 	DOS0 = (-1./np.pi) * G[:,:,0,0].imag
 	DOS1 = (-1./np.pi) * G[:,:,1,1].imag
 	DOS2 = (-1./np.pi) * G[:,:,2,2].imag
 	DOS3 = (-1./np.pi) * G[:,:,3,3].imag
-	ADOS0 = (-1./np.pi) * GAndrew[:,:,1,1].imag
-	ADOS1 = (-1./np.pi) * GAndrew[:,:,0,0].imag
+
 	# np.testing.assert_equal(len(kxvals),len(DOSend0))
 	# np.testing.assert_equal(len(kxvals),len(DOSfull1))
 
@@ -217,8 +217,6 @@ def main():
 		ax[i].plot(kxvals,DOS1[i,:],label='index 1',ls = '--')
 		ax[i].plot(kxvals,DOS2[i,:],label='index 2',ls = '--')
 		ax[i].plot(kxvals,DOS3[i,:],label='index 3',ls = '--')
-		ax[i].plot(kxvals,ADOS0[i,:],label='Andrew 0',alpha = 0.5)
-		ax[i].plot(kxvals,ADOS1[i,:],label='Andrew 1',alpha = 0.5)
 		#ax[i].set_ylim(0,2.2)
 		ax[i].set_title(f'$\\omega$ = {omega:.3}')
 		ax[i].set_xlabel('$k_x$')
@@ -242,7 +240,7 @@ def main():
 
 
 def test_kwargs():
-	H0 = ret_H0(0.1, **kwargs)
+	H0 = ret_H0(0.1, )
 	print(H0)
 
 
@@ -252,7 +250,7 @@ def test_Ginfomega():
 	delta = 0.0001
 	omegavals = np.linspace(-3.1,3.1,1000) 
 	dimH = 4
-	G = np.array([fastrecGfull(omega,kx,**kwargs) 
+	G = np.array([fastrecGfull(omega,kx) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	DOS = np.array([-1./np.pi * G[:,0,i,i].imag for i in range(dimH)])
 
@@ -271,7 +269,7 @@ def test_Ginfkx():
 	kxvals = np.linspace(-np.pi,np.pi,1000)
 	delta = 0.0001
 	dimH = 4
-	G = np.array([fastrecGfull(omega,kx,**kwargs) 
+	G = np.array([fastrecGfull(omega,kx) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	DOS = np.array([-1./np.pi * G[0,:,i,i].imag for i in range(dimH)])
 
@@ -291,7 +289,7 @@ def compare_integrate():
 	delta = 0.0001
 	dimH = 4
 	startsimps = time.time()
-	G = np.array([fastrecGfull(omega,kx,**kwargs) 
+	G = np.array([fastrecGfull(omega,kx) 
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	DOS = np.array([-1./np.pi * G[0,:,i,i].imag for i in range(dimH)]) 
 	integrand = DOS[0] #-ImG(kx), we're doing now the LDOS
@@ -299,7 +297,7 @@ def compare_integrate():
 	stopsimps = time.time()
 
 	startquad = time.time()
-	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx)[0,0].imag
 	quadint = quad(callintegrand, -np.pi,np.pi)
 	stopquad = time.time()
 
@@ -309,7 +307,7 @@ def compare_integrate():
 
 
 def helper_LDOS(omega):
-	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	callintegrand = lambda kx: -1./np.pi * fastrecGfull(omega,kx)[0,0].imag
 	LDOS = quad(callintegrand,-np.pi,np.pi)[0] 
 	return LDOS
 
@@ -320,7 +318,7 @@ def test_LDOS():
 	'''
 	# omegavals = np.linspace(0,3.1,512)
 	omegavals = np.linspace(0,3.1,256)
-	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx)[0,0].imag
 	# LDOS = quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals
 	# PROCESSES = 10
 	PROCESSES = mp.cpu_count()
@@ -352,7 +350,7 @@ def test_LDOS_threads():
 	Even slower lol
 	'''
 	omegavals = np.linspace(0,3.1,16)
-	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
+	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx)[0,0].imag
 	# LDOS = quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals
 	startmp = time.time()
 	with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -376,8 +374,9 @@ def test_LDOS_threads():
 if __name__ == '__main__': 
 	# main()
 	# test_Ginfkx() #show lifshitz transition in spectral weight
-	test_LDOS()
+	# test_LDOS()
 	# test_LDOS_threads()
+	compare_integrate()
 
 
 
