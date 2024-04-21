@@ -319,7 +319,7 @@ def test_LDOS():
 	Use scipy.quad for this
 	'''
 	# omegavals = np.linspace(0,3.1,512)
-	omegavals = np.linspace(0,3.1,512)
+	omegavals = np.linspace(0,3.1,256)
 	# callintegrand = lambda kx, omega: -1./np.pi * fastrecGfull(omega,kx,**kwargs)[0,0].imag
 	# LDOS = quad(partial(callintegrand,omega=om),-np.pi,np.pi)[0] for om in omegavals
 	# PROCESSES = 10
@@ -376,8 +376,8 @@ def test_LDOS_threads():
 if __name__ == '__main__': 
 	# main()
 	# test_Ginfkx() #show lifshitz transition in spectral weight
-	# test_LDOS()
-	test_LDOS_threads()
+	test_LDOS()
+	# test_LDOS_threads()
 
 
 
