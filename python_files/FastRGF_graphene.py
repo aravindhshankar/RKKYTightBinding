@@ -334,7 +334,7 @@ def test_LDOS():
 				'LDOS' : LDOS,
 				'INFO' : '[0,0] site of -1/pi Im G'
 				}
-	dict2h5(savedict,'GrapheneAsiteLDOS.h5', verbose=True)
+	# dict2h5(savedict,'GrapheneAsiteLDOS.h5', verbose=True)
 
 	fig,ax = plt.subplots(1)
 	ax.plot(omegavals, LDOS, label = 'quad LDOS')
