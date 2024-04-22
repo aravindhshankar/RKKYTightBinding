@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import eigvals,eigvalsh
 import multiprocessing as mp
+from scipy.integrate import quad
 
 def m1():
 	ivals = np.array([1,2,3])
@@ -44,8 +45,15 @@ def test_mp():
 	print(A)
 
 
+def test_quad_vec():
+	integrand = lambda x: np.eye(2) * np.sin(x)
+	vec_quad = np.vectorize(quad)
+	intval = vec_quad(integrand, 0,np.pi)
+	print(inval)
+
 
 
 if __name__ == '__main__':
-	test_mp()
+	# test_mp()
+	test_quad_vec()
 
