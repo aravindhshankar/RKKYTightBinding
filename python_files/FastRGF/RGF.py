@@ -59,7 +59,7 @@ def fastrecGrev(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	return G
 
 
-def fastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
+def MOMfastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	# Tydag = Ty.conj().T
 	Gfwd = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta)
 	Grev = fastrecGfwd(omega,H0,Ty.conj().T,RECURSIONS,delta)
@@ -68,13 +68,17 @@ def fastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	return G
 
 
-def fastrecDOSfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
+def MOMfastrecDOSfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
+	Tydag = Ty.conj().T
 	Gfwd = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta)
-	Grev = fastrecGfwd(omega,H0,Ty.conj().T,RECURSIONS,delta)
+	Grev = fastrecGfwd(omega,H0,Tydag.T,RECURSIONS,delta)
 	# Grev = fastrecGrev(omega,kx,**kwargs)
+	# DOS = (-1./np.pi) * np.imag(np.linalg.inv(np.linalg.inv(Grev) - Ty@Gfwd@Tydag))
 	DOS = (-1./np.pi) * np.imag(np.linalg.inv(np.linalg.inv(Grev) - Ty@Gfwd@Tydag))
 	# return (-1./np.pi) * G.imag
 	return DOS
+
+
 
 
 
