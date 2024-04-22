@@ -83,7 +83,7 @@ def test_Ginfkx():
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,1000)
 	delta = 1e-8
-	RECURSIONS = 40
+	RECURSIONS = 30
 	dimH = 4
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
@@ -141,20 +141,28 @@ def compare_integrate():
 	print('quad = ', quadint, f' finished in {(stopquad - startquad):.8} sec')
 
 
-def helper_LDOS_mp(omega,delta,RECURSIONS):
+def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False):
 	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)[0,0]
-	LDOS = quad(callintegrand,-np.pi,np.pi,limit=500)[0] 
+	if analyze == True:
+		kxgrid = np.linspace(-np.pi,np.pi,1000)
+		sparseLDOS = np.array([callintegrand(kx) for kx in kxgrid])
+		peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+		breakpoints = [kxgrid[peak] for peak in peaks]
+		LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
+	else: 
+		LDOS = quad(callintegrand,-np.pi,np.pi,limit=50)[0] 
 	return LDOS
+
 
 
 def test_LDOS_mp():
 	'''
 	Use scipy.quad for this
 	'''
-	RECURSIONS = 80
+	RECURSIONS = 25
 	delta = 1e-5
 	# omegavals = np.linspace(0,3.1,512)
-	# omegavals = np.linspace(0,3.1,10)
+	# omegavals = np.linspace(0,3.1,100)
 	omegavals = make_omega_grid()
 
 	PROCESSES = mp.cpu_count()
@@ -162,7 +170,7 @@ def test_LDOS_mp():
 	# with mp.Pool(PROCESSES) as pool:
 	# 	LDOS = pool.map(helper_LDOS_mp, omegavals)
 	with mp.Pool(PROCESSES) as pool:
-			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS), omegavals)
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=False), omegavals)
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
@@ -177,7 +185,7 @@ def test_LDOS_mp():
 	ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
 	ax.axvline(1., ls='--', c='grey')
 	ax.set_xlabel('omega')
-	ax.set_title('Graphene LDOS A site')
+	ax.set_title(f'Graphene LDOS A site with $\\delta = $ {delta:.6}')
 	plt.show()
 
 
