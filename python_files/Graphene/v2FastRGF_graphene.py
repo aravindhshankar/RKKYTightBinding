@@ -34,8 +34,25 @@ def ret_H0(kx):
 	return M + P
 
 
-def ret_Ty():
+def ret_Ty(kx=0):
 	return np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
+
+def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, uniform_spacing=0.1):
+    # Sort the peaks list
+    peaks = sorted(peaks)
+    
+    # Generate grid around peaks
+    peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
+                                for peak in peaks])
+
+    # Generate uniform grid for the remaining region
+    uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
+                               min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+
+    # Concatenate the peak and uniform grids
+    grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
+
+    return grid
 
 
 def make_omega_grid():
@@ -146,14 +163,22 @@ def compare_integrate():
 	print('quad = ', quadint, f' finished in {(stopquad - startquad):.8} sec')
 
 
-def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False):
-	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)[0,0]
+def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
+	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 	if analyze == True:
 		kxgrid = np.linspace(-np.pi,np.pi,1000)
 		sparseLDOS = np.array([callintegrand(kx) for kx in kxgrid])
 		peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
-		breakpoints = [kxgrid[peak] for peak in peaks]
-		LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
+		breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
+		if method == 'quad':
+			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
+		elif method == 'adaptive': 
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,uniform_spacing=2*np.pi/1000.,num_pp=100)
+			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+			LDOS = simpson(fine_integrand,adaptive_kxgrid)
+		else: 
+			raise Exception('Unkown method for integration')
+			exit(1)
 	else: 
 		LDOS = quad(callintegrand,-np.pi,np.pi,limit=50)[0] 
 	return LDOS
@@ -165,7 +190,7 @@ def test_LDOS_mp():
 	Use scipy.quad for this
 	'''
 	RECURSIONS = 20
-	delta = 1e-4
+	delta = 1e-6
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	omegavals = make_omega_grid()
@@ -175,7 +200,7 @@ def test_LDOS_mp():
 	# with mp.Pool(PROCESSES) as pool:
 	# 	LDOS = pool.map(helper_LDOS_mp, omegavals)
 	with mp.Pool(PROCESSES) as pool:
-			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=False), omegavals)
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
@@ -186,7 +211,7 @@ def test_LDOS_mp():
 				'delta' : delta,
 				'INFO' : '[0,0] site of -1/pi Im G'
 				}
-	savepath = os.path.join(path_to_dump, 'FunkGridGrapheneAsiteLDOS.h5')
+	savepath = os.path.join(path_to_dump, 'AdaptiveIntegrnGrapheneAsiteLDOS.h5')
 	dict2h5(savedict,savepath, verbose=True)
 
 	fig,ax = plt.subplots(1)
