@@ -1,10 +1,11 @@
-import sys 
+import sys
+import os
 sys.path.insert(0,'..')
 import numpy as np
 from scipy.linalg import eigvals, eigvalsh
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
-from scipy.linalg import norm
+# from scipy.linalg import norm
 from scipy.integrate import simpson, quad
 from functools import partial
 import time 
@@ -13,7 +14,11 @@ import multiprocessing as mp
 from FastRGF.RGF import MOMfastrecDOSfull
 from h5_handler import *
 import concurrent.futures
-
+from scipy.fft import ifft, fftshift
+path_to_dump = '../Dump/Graphene'
+if not os.path.exists(path_to_dump): 
+	os.makedirs(path_to_dump)
+	print('Dump directory created at ', path_to_dump)
 
 epsB = 0.
 epsA = 0.
@@ -35,7 +40,7 @@ def ret_Ty():
 
 def make_omega_grid():
 	# Logarithmic spacing from 1e-4 to 5e-1
-	log_space1 = np.logspace(np.log10(1e-4), np.log10(5e-1), num=20)
+	log_space1 = np.logspace(np.log10(1e-6), np.log10(5e-1), num=20)
 
 	# Linear spacing from 5e-1 to 9e-1
 	linear_space1 = np.linspace(5e-1, 9e-1, num=20)
@@ -159,8 +164,8 @@ def test_LDOS_mp():
 	'''
 	Use scipy.quad for this
 	'''
-	RECURSIONS = 25
-	delta = 1e-5
+	RECURSIONS = 20
+	delta = 1e-4
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	omegavals = make_omega_grid()
@@ -177,9 +182,12 @@ def test_LDOS_mp():
 	
 	savedict = {'omegavals' : omegavals,
 				'LDOS' : LDOS,
+				'RECURSIONS' : RECURSIONS, 
+				'delta' : delta,
 				'INFO' : '[0,0] site of -1/pi Im G'
 				}
-	# dict2h5(savedict,'GrapheneAsiteLDOS.h5', verbose=True)
+	savepath = os.path.join(path_to_dump, 'FunkGridGrapheneAsiteLDOS.h5')
+	dict2h5(savedict,savepath, verbose=True)
 
 	fig,ax = plt.subplots(1)
 	ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
@@ -237,6 +245,11 @@ def test_LDOS_threads():
 	ax.set_xlabel('omega')
 	ax.set_title('Graphene LDOS A site')
 	plt.show()
+
+
+def testFFT():
+	return None
+
 
 if __name__ == '__main__': 
 	# main()

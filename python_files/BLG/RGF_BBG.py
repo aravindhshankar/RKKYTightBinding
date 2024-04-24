@@ -1,4 +1,5 @@
 import sys 
+import os
 sys.path.insert(0,'..')
 import numpy as np
 from scipy.linalg import eigvals, eigvalsh
@@ -13,6 +14,10 @@ import multiprocessing as mp
 from FastRGF.RGF import MOMfastrecDOSfull
 from h5_handler import *
 import concurrent.futures
+path_to_dump = '../Dump/BLG'
+if not os.path.exists(path_to_dump): 
+	os.makedirs(path_to_dump)
+	print('Dump directory created at ', path_to_dump)
 
 ## Maybe you want to rewrite this section as data members of a class that you can inherit from
 ## Or even add these data quantities to a separate module which can be imported
@@ -95,6 +100,22 @@ def ret_H0(kx):
 
 	return M 
 
+def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, uniform_spacing=0.1):
+    # Sort the peaks list
+    peaks = sorted(peaks)
+    
+    # Generate grid around peaks
+    peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
+                                for peak in peaks])
+
+    # Generate uniform grid for the remaining region
+    uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
+                               min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+
+    # Concatenate the peak and uniform grids
+    grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
+
+    return grid
 
 def ret_Ty(kx):
 	# non-hermitian : only couples along -ve y direction
@@ -112,16 +133,74 @@ def ret_Ty(kx):
 
 	return Ty
 
+def test_Ginfkx():
+	# omega = 1 - 1e-2
+	omega = 5e-4
+	omegavals = (omega,)
+	kxvals = np.linspace(-np.pi,np.pi,1000)
+	delta = 1e-6
+	RECURSIONS = 25
+	dimH = 8
+	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
+					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
+	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
+	peakvals = [kxvals[peak] for peak in peaks]
+	fig, ax = plt.subplots(1)
+	ax.plot(kxvals, kDOS[0,:,0,0])
+	ax.set_xlabel(r'$k_x$')
+	ax.set_title(f'$\\omega$ = {omega:.3}, \\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
+	# ax.vlines(kxvals[peaks], ls = '--', c = 'grey')
+	for peak in peakvals:
+		ax.axvline(peak,ls='--',c='gray')
+	# ax.legend()
+	# print('Started quad integrate without peaks')
+	# start_time = time.perf_counter()
+	# intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0], 
+	# 					-np.pi,np.pi)[0]
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {intval:.5}')
 
 
-def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False):
+	# print('Started quad integrate WITH peaks')
+	# start_time = time.perf_counter()
+	# intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0], 
+	# 					-np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {intval:.5}')
+
+	for num_pp in [100,500,1000]: #checking convergence
+		print('Started simpson integrate WITH peaks')
+		peak_spacing = 0.01
+		print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
+		start_time = time.perf_counter()
+		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,uniform_spacing=2*np.pi/1000,num_pp=num_pp)
+		fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
+		elapsed = time.perf_counter() - start_time
+		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+		print(f'intval = {simpson_intval:.8}')
+
+	plt.show()
+
+
+def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
 	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 	if analyze == True:
 		kxgrid = np.linspace(-np.pi,np.pi,1000)
 		sparseLDOS = np.array([callintegrand(kx) for kx in kxgrid])
 		peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
-		breakpoints = [kxgrid[peak] for peak in peaks]
-		LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
+		breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
+		if method == 'quad':
+			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
+		elif method == 'adaptive': 
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,uniform_spacing=2*np.pi/1000.,num_pp=100)
+			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+			LDOS = simpson(fine_integrand,adaptive_kxgrid)
+		else: 
+			raise Exception('Unkown method for integration')
+			exit(1)
 	else: 
 		LDOS = quad(callintegrand,-np.pi,np.pi,limit=50)[0] 
 	return LDOS
@@ -133,18 +212,18 @@ def test_LDOS_mp():
 	Use scipy.quad for this
 	'''
 	RECURSIONS = 25
-	delta = 1e-4
+	delta = 1e-6
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	# omegavals = make_omega_grid()
-	omegavals = np.logspace(np.log10(1e-5), np.log10(1e-1), num = 50)
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = 100)
 
 	PROCESSES = mp.cpu_count()
 	startmp = time.perf_counter()
 	# with mp.Pool(PROCESSES) as pool:
 	# 	LDOS = pool.map(helper_LDOS_mp, omegavals)
 	with mp.Pool(PROCESSES) as pool:
-			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True), omegavals)
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
@@ -168,6 +247,7 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
+	# test_Ginfkx()
 	test_LDOS_mp()
 
 

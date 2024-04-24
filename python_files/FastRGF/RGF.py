@@ -69,6 +69,9 @@ def MOMfastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 
 
 def MOMfastrecDOSfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
+	'''
+	Returns the full -1/pi Im G(kx, omega) matrix in the bulk 
+	'''
 	Tydag = Ty.conj().T
 	Gfwd = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta)
 	Grev = fastrecGfwd(omega,H0,Tydag,RECURSIONS,delta)
