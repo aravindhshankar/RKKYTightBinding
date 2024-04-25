@@ -37,41 +37,25 @@ def ret_H0(kx):
 def ret_Ty(kx=0):
 	return np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
 
-# def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, uniform_spacing=0.1):
-#     # Sort the peaks list
-#     peaks = sorted(peaks)
-    
-#     # Generate grid around peaks
-#     peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
-#                                 for peak in peaks])
-
-#     # Generate uniform grid for the remaining region
-#     uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
-#                                min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
-
-#     # Concatenate the peak and uniform grids
-#     grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
-
-#     return grid
-
-def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, uniform_spacing=0.1, log_spacing_factor=0.1,num_pp=100):
+def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, num_uniform=1000):
     # Sort the peaks list
+    assert a < b , "a should be less than b" 
     peaks = sorted(peaks)
     
-    # Generate grid around peaks with logarithmic spacing
-    peak_grid = np.concatenate([np.logspace(np.log10(max(a, peak) - peak_spacing),
-                                             np.log10(min(b, peak) + peak_spacing),
-                                             num=num_pp, base=10)
+    # Generate grid around peaks
+    peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
                                 for peak in peaks])
 
     # Generate uniform grid for the remaining region
-    uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
-                               min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+    # uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
+    #                            min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+    uniform_grid = np.linspace(a,b,num=num_uniform)
 
     # Concatenate the peak and uniform grids
     grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
 
     return grid
+
 
 def make_omega_grid():
 	# Logarithmic spacing from 1e-4 to 5e-1
@@ -123,7 +107,7 @@ def test_Ginfkx():
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,1000)
 	delta = 1e-6
-	RECURSIONS = 20
+	RECURSIONS = 22
 	dimH = 4
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
@@ -157,21 +141,21 @@ def test_Ginfkx():
 	# print(f'intval = {intval:.5}')
 
 
-	for num_pp in [100,500,1000]: #checking convergence
+	for num_pp in [200,]: #checking convergence
 		print('Started simpson integrate WITH peaks')
-		peak_spacing = 0.1
-		uniform_spacing = 2*np.pi/1000
-		print(f'num_pp = {num_pp}, peak_spacing = {2.*peak_spacing/num_pp:.5}, lin_spacing = {uniform_spacing:.5}')
+		peak_spacing = 0.005
+		num_uniform = 1000
+		print(f'num_pp = {num_pp}, peak_spacing = {2.*peak_spacing/num_pp:.5}, lin_spacing = {2.*np.pi/num_uniform:.5}')
 		start_time = time.perf_counter()
-		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,uniform_spacing=uniform_spacing,num_pp=num_pp)
+		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,num_uniform=num_uniform,num_pp=num_pp)
 		fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
 		elapsed = time.perf_counter() - start_time
 		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 		print(f'intval = {simpson_intval:.8}')
+		ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
 
-
-
+	ax.plot()
 	plt.show()
 
 
@@ -209,7 +193,7 @@ def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
 		if method == 'quad':
 			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
 		elif method == 'adaptive': 
-			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.1,uniform_spacing=2*np.pi/1000.,num_pp=200)
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.005,num_uniform=1000,num_pp=200)
 			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 			LDOS = simpson(fine_integrand,adaptive_kxgrid)
 		else: 
@@ -230,6 +214,7 @@ def test_LDOS_mp():
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	omegavals = make_omega_grid()
+	print(f'Total number of points on the omega grid = {len(omegavals)}')
 
 	PROCESSES = mp.cpu_count()
 	startmp = time.perf_counter()
@@ -318,8 +303,8 @@ def testFFT():
 
 if __name__ == '__main__': 
 	# main()
-	# test_Ginfkx() #show lifshitz transition in spectral weight
-	test_LDOS_mp()
+	test_Ginfkx() #show lifshitz transition in spectral weight
+	# test_LDOS_mp()
 	# test_omega_grid()
 
 
