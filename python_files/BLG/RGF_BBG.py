@@ -100,8 +100,9 @@ def ret_H0(kx):
 
 	return M 
 
-def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, uniform_spacing=0.1):
+def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, num_uniform=1000):
     # Sort the peaks list
+    assert a < b , "a should be less than b" 
     peaks = sorted(peaks)
     
     # Generate grid around peaks
@@ -109,13 +110,15 @@ def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, unifo
                                 for peak in peaks])
 
     # Generate uniform grid for the remaining region
-    uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
-                               min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+    # uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
+    #                            min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+    uniform_grid = np.linspace(a,b,num=num_uniform)
 
     # Concatenate the peak and uniform grids
     grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
 
     return grid
+
 
 def ret_Ty(kx):
 	# non-hermitian : only couples along -ve y direction
@@ -135,9 +138,9 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 5e-4
+	omega = 0.243
 	omegavals = (omega,)
-	kxvals = np.linspace(-np.pi,np.pi,1000)
+	kxvals = np.linspace(-np.pi,np.pi,20000)
 	delta = 1e-6
 	RECURSIONS = 25
 	dimH = 8
@@ -170,17 +173,18 @@ def test_Ginfkx():
 	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	# print(f'intval = {intval:.5}')
 
-	for num_pp in [100,500,1000]: #checking convergence
+	for num_pp in [300]: #checking convergence
 		print('Started simpson integrate WITH peaks')
 		peak_spacing = 0.01
 		print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
 		start_time = time.perf_counter()
-		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,uniform_spacing=2*np.pi/1000,num_pp=num_pp)
+		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.005,num_uniform=20000,num_pp=10000)
 		fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
 		elapsed = time.perf_counter() - start_time
 		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 		print(f'intval = {simpson_intval:.8}')
+		ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
 
 	plt.show()
 
@@ -195,7 +199,7 @@ def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
 		if method == 'quad':
 			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
 		elif method == 'adaptive': 
-			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,uniform_spacing=2*np.pi/1000.,num_pp=100)
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.005,num_uniform=500,num_pp=300)
 			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 			LDOS = simpson(fine_integrand,adaptive_kxgrid)
 		else: 
@@ -247,8 +251,8 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
-	# test_Ginfkx()
-	test_LDOS_mp()
+	test_Ginfkx()
+	# test_LDOS_mp()
 
 
 

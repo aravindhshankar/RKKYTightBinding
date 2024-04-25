@@ -107,7 +107,7 @@ def test_Ginfkx():
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,1000)
 	delta = 1e-6
-	RECURSIONS = 22
+	RECURSIONS = 20
 	dimH = 4
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
@@ -141,10 +141,10 @@ def test_Ginfkx():
 	# print(f'intval = {intval:.5}')
 
 
-	for num_pp in [200,]: #checking convergence
+	for num_pp in [300,]: #checking convergence
 		print('Started simpson integrate WITH peaks')
 		peak_spacing = 0.005
-		num_uniform = 1000
+		num_uniform = 500
 		print(f'num_pp = {num_pp}, peak_spacing = {2.*peak_spacing/num_pp:.5}, lin_spacing = {2.*np.pi/num_uniform:.5}')
 		start_time = time.perf_counter()
 		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,num_uniform=num_uniform,num_pp=num_pp)
@@ -193,7 +193,7 @@ def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
 		if method == 'quad':
 			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
 		elif method == 'adaptive': 
-			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.005,num_uniform=1000,num_pp=200)
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.005,num_uniform=500,num_pp=300)
 			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 			LDOS = simpson(fine_integrand,adaptive_kxgrid)
 		else: 
@@ -209,7 +209,7 @@ def test_LDOS_mp():
 	'''
 	Use scipy.quad for this
 	'''
-	RECURSIONS = 20
+	RECURSIONS = 22
 	delta = 1e-6
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
@@ -303,8 +303,8 @@ def testFFT():
 
 if __name__ == '__main__': 
 	# main()
-	test_Ginfkx() #show lifshitz transition in spectral weight
-	# test_LDOS_mp()
+	# test_Ginfkx() #show lifshitz transition in spectral weight
+	test_LDOS_mp()
 	# test_omega_grid()
 
 
