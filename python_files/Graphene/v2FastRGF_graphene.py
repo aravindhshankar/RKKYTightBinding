@@ -37,12 +37,31 @@ def ret_H0(kx):
 def ret_Ty(kx=0):
 	return np.array([[0,-t,0,0],[0,0,0,0],[0,0,0,0],[0,0,-t,0]]) #Right hopping matrix along Y
 
-def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, uniform_spacing=0.1):
+# def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, uniform_spacing=0.1):
+#     # Sort the peaks list
+#     peaks = sorted(peaks)
+    
+#     # Generate grid around peaks
+#     peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
+#                                 for peak in peaks])
+
+#     # Generate uniform grid for the remaining region
+#     uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
+#                                min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
+
+#     # Concatenate the peak and uniform grids
+#     grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
+
+#     return grid
+
+def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, uniform_spacing=0.1, log_spacing_factor=0.1,num_pp=100):
     # Sort the peaks list
     peaks = sorted(peaks)
     
-    # Generate grid around peaks
-    peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
+    # Generate grid around peaks with logarithmic spacing
+    peak_grid = np.concatenate([np.logspace(np.log10(max(a, peak) - peak_spacing),
+                                             np.log10(min(b, peak) + peak_spacing),
+                                             num=num_pp, base=10)
                                 for peak in peaks])
 
     # Generate uniform grid for the remaining region
@@ -53,7 +72,6 @@ def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, unifo
     grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
 
     return grid
-
 
 def make_omega_grid():
 	# Logarithmic spacing from 1e-4 to 5e-1
@@ -101,15 +119,17 @@ def test_Ginfomega():
 	plt.show()
 
 def test_Ginfkx():
-	omega = 1 - 1e-2
+	omega = 1.1
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,1000)
-	delta = 1e-8
-	RECURSIONS = 30
+	delta = 1e-6
+	RECURSIONS = 20
 	dimH = 4
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
+	peakvals = [kxvals[peak] for peak in peaks]
+
 	fig, ax = plt.subplots(1)
 	ax.plot(kxvals, kDOS[0,:,0,0])
 	ax.set_xlabel(r'$k_x$')
@@ -119,22 +139,38 @@ def test_Ginfkx():
 		ax.axvline(kxvals[peak],ls='--',c='gray')
 	# ax.legend()
 
-	print('Started quad integrate without peaks')
-	start_time = time.perf_counter()
-	intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta,)[0,0], 
-						-np.pi,np.pi)[0]
-	elapsed = time.perf_counter() - start_time
-	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {intval:.5}')
+	# print('Started quad integrate without peaks')
+	# start_time = time.perf_counter()
+	# intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta,)[0,0], 
+	# 					-np.pi,np.pi)[0]
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {intval:.5}')
 
 
-	print('Started quad integrate WITH peaks')
-	start_time = time.perf_counter()
-	intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta,)[0,0], 
-						-np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
-	elapsed = time.perf_counter() - start_time
-	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {intval:.5}')
+	# print('Started quad integrate WITH peaks')
+	# start_time = time.perf_counter()
+	# intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta,)[0,0], 
+	# 					-np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {intval:.5}')
+
+
+	for num_pp in [100,500,1000]: #checking convergence
+		print('Started simpson integrate WITH peaks')
+		peak_spacing = 0.1
+		uniform_spacing = 2*np.pi/1000
+		print(f'num_pp = {num_pp}, peak_spacing = {2.*peak_spacing/num_pp:.5}, lin_spacing = {uniform_spacing:.5}')
+		start_time = time.perf_counter()
+		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,uniform_spacing=uniform_spacing,num_pp=num_pp)
+		fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
+		elapsed = time.perf_counter() - start_time
+		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+		print(f'intval = {simpson_intval:.8}')
+
+
 
 	plt.show()
 
@@ -173,7 +209,7 @@ def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
 		if method == 'quad':
 			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
 		elif method == 'adaptive': 
-			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,uniform_spacing=2*np.pi/1000.,num_pp=100)
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.1,uniform_spacing=2*np.pi/1000.,num_pp=200)
 			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 			LDOS = simpson(fine_integrand,adaptive_kxgrid)
 		else: 
@@ -204,7 +240,7 @@ def test_LDOS_mp():
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
-	
+	LDOS = np.array(LDOS)
 	savedict = {'omegavals' : omegavals,
 				'LDOS' : LDOS,
 				'RECURSIONS' : RECURSIONS, 
@@ -214,11 +250,15 @@ def test_LDOS_mp():
 	savepath = os.path.join(path_to_dump, 'AdaptiveIntegrnGrapheneAsiteLDOS.h5')
 	dict2h5(savedict,savepath, verbose=True)
 
-	fig,ax = plt.subplots(1)
-	ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
-	ax.axvline(1., ls='--', c='grey')
-	ax.set_xlabel('omega')
-	ax.set_title(f'Graphene LDOS A site with $\\delta = $ {delta:.6}')
+	fig,ax = plt.subplots(2)
+	ax[0].plot(omegavals, LDOS, '.-', label = 'quad LDOS')
+	ax[0].axvline(1., ls='--', c='grey')
+	ax[0].set_xlabel('omega')
+	ax[0].set_title(f'Graphene LDOS A site with $\\delta = $ {delta:.6}')
+
+	ax[1].loglog(omegavals[omegavals<1],LDOS[omegavals<1])
+	ax[1].set_xlabel('omega')
+
 	plt.show()
 
 
