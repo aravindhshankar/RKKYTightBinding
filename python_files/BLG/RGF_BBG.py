@@ -58,7 +58,7 @@ def Ham_BLG(k):
 	return np.array(ham)
 
 def ret_H0(kx):
-	Tx = np.zeros((8,8))
+	Tx = np.zeros((8,8),dtype=np.cdouble)
 	Tx[0,5] = -gamma3
 	Tx[0,6] = -gamma0
 	Tx[0,7] = gamma4
@@ -69,7 +69,7 @@ def ret_H0(kx):
 
 	#Horrible code ahead : please don't judge
 
-	M = np.zeros((8,8))
+	M = np.zeros((8,8),dtype=np.cdouble)
 	M[0,0] = epsB2
 	M[0,1] = -gamma3
 	M[0,2] = -gamma0
@@ -106,13 +106,13 @@ def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, num_u
     peaks = sorted(peaks)
     
     # Generate grid around peaks
-    peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp)
+    peak_grid = np.concatenate([np.linspace(max(a, peak - peak_spacing), min(b, peak + peak_spacing), num = num_pp, dtype=np.double)
                                 for peak in peaks])
 
     # Generate uniform grid for the remaining region
     # uniform_grid = np.linspace(max(a, min(peaks, default=a) + peak_spacing),
     #                            min(b, max(peaks, default=b) - peak_spacing), num=int((b - a) / uniform_spacing))
-    uniform_grid = np.linspace(a,b,num=num_uniform)
+    uniform_grid = np.linspace(a,b,num=num_uniform,dtype=np.double)
 
     # Concatenate the peak and uniform grids
     grid = np.sort(np.concatenate([peak_grid, uniform_grid]))
@@ -122,7 +122,7 @@ def generate_grid_with_peaks(a, b, peaks, peak_spacing=0.01, num_pp = 200, num_u
 
 def ret_Ty(kx):
 	# non-hermitian : only couples along -ve y direction
-	Ty = np.zeros((8,8),dtype = complex)
+	Ty = np.zeros((8,8),dtype = np.cdouble)
 	Ty[0,2] = -gamma0
 	Ty[0,3] = gamma4
 	Ty[0,5] = -gamma3 * np.exp(-1j*kx)
@@ -138,14 +138,15 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 0.243
+	omega = 2e-3
+	# omega = 2e-2
 	omegavals = (omega,)
-	kxvals = np.linspace(-np.pi,np.pi,20000)
+	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	delta = 1e-6
-	RECURSIONS = 25
+	RECURSIONS = 20
 	dimH = 8
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
-					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
+					for omega in omegavals for kx in kxvals],dtype=np.longdouble).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
 	peakvals = [kxvals[peak] for peak in peaks]
 	fig, ax = plt.subplots(1)
@@ -173,19 +174,19 @@ def test_Ginfkx():
 	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	# print(f'intval = {intval:.5}')
 
-	for num_pp in [300]: #checking convergence
+	for num_pp in [1000]: #checking convergence
 		print('Started simpson integrate WITH peaks')
-		peak_spacing = 0.01
+		peak_spacing = 0.05
 		print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
 		start_time = time.perf_counter()
-		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.005,num_uniform=20000,num_pp=10000)
-		fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+		fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
 		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
 		elapsed = time.perf_counter() - start_time
 		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 		print(f'intval = {simpson_intval:.8}')
 		ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
-
+	# print(type(fine_integrand[0]))
 	plt.show()
 
 

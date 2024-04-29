@@ -8,7 +8,7 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	Ty is the matrix propagating in the forward Y direction
 	'''
 	dimH = H0.shape[0] #Assumes that H is a square matrix 
-	G0inv = (omega+1j*delta)*np.eye(dimH) - H0
+	G0inv = (omega+1j*delta)*np.eye(dimH,dtype=np.cdouble) - H0
 	G = np.linalg.inv(G0inv) #Initialize G to G0
 	Tydag = Ty.conj().T
 
@@ -17,7 +17,7 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	T = tnf
 	tprod = tnb
 	for itern in range(RECURSIONS):
-		tmp = np.linalg.inv(np.eye(dimH) - tnf@tnb - tnb@tnf)
+		tmp = np.linalg.inv(np.eye(dimH,dtype=np.cdouble) - tnf@tnb - tnb@tnf)
 		tnf = tmp@tnf@tnf
 		tnb = tmp@tnb@tnb
 		T = T + tprod@tnf
@@ -36,7 +36,7 @@ def fastrecGrev(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	Notice that instead of using this function, one can just pass Ty.conj().T to the fastrecGfwd method
 	'''
 	dimH = H0.shape[0] #Assumes that H is a square matrix 
-	G0inv = (omega+1j*delta)*np.eye(dimH) - H0
+	G0inv = (omega+1j*delta)*np.eye(dimH,dtype=np.cdouble) - H0
 	G = np.linalg.inv(G0inv) #Initialize G to G0
 	Tydag = Ty
 	Ty = Tydag.conj().T
@@ -46,7 +46,7 @@ def fastrecGrev(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	T = tnf
 	tprod = tnb
 	for itern in range(RECURSIONS):
-		tmp = np.linalg.inv(np.eye(dimH) - tnf@tnb - tnb@tnf)
+		tmp = np.linalg.inv(np.eye(dimH,dtype=np.cdouble) - tnf@tnb - tnb@tnf)
 		tnf = tmp@tnf@tnf
 		tnb = tmp@tnb@tnb
 		T = T + tprod@tnf
