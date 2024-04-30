@@ -4,14 +4,17 @@ import numpy as np
 mpm.mp.dps=32
 
 A = np.random.rand(4).reshape((2,2))
-B = np.random.rand(4).reshape((2,2))
-C = np.random.rand(4).reshape((2,2))
+# B = np.random.rand(4).reshape((2,2))
+# C = np.random.rand(4).reshape((2,2))
 
 
 mpmA = mpm.matrix(A)
-mpmB = mpm.matrix(B)
-mpmC = mpm.matrix(C)
+# mpmB = mpm.matrix(B)
+# mpmC = mpm.matrix(C)
 
+print(mpmA)
+print(mpm.diag(mpmA))
+# print(mpmA, mpm.diag(mpm.diag(mpmA)))
 
 # print(np.linalg.inv(A@B@C))
 # print((mpmA*mpmB*mpmC)**-1) #inverse works
@@ -19,13 +22,13 @@ mpmC = mpm.matrix(C)
 
 # print(mpmA + mpm.matrix(A))
 # print(2*mpmA) # mpm matrix cannot be added to np arrays. convert explicitly using mpm.matrix()
-omega = 2.34323 + 1j*0.001
-# mpmomega = mpm.mpc(str(omega.real), str(omega.imag))
-mpmomega = mpm.mpf(str(omega.real)) + 1j*mpm.mpf(str(omega.imag))
-D = mpmomega * mpm.eye(2)
-# print(D)
-# print(D.transpose_conj()) #works
-print(D.apply(mpm.im))
+# omega = 2.34323 + 1j*0.001
+# # mpmomega = mpm.mpc(str(omega.real), str(omega.imag))
+# mpmomega = mpm.mpf(str(omega.real)) + 1j*mpm.mpf(str(omega.imag))
+# D = mpmomega * mpm.eye(2)
+# # print(D)
+# # print(D.transpose_conj()) #works
+# print(D.apply(mpm.im))
 
 
 # print(A.shape[0], mpmA.rows) #Use mpmA.rows to get the shape
@@ -37,8 +40,38 @@ print(D.apply(mpm.im))
 
 # print(mpm.pi)
 
-E = mpm.matrix(2)
-E[0,0] = mpm.mpf('2.12')
-E[0,1] = mpm.mpc('1.23' , '3.21')
-E[1,0] = mpm.exp(1j*mpm.mpf('2.21'))
-print(E)
+# E = mpm.matrix(2)
+# E[0,0] = mpm.mpf('1e-6')
+# E[0,1] = mpm.mpc('1.23' , '3.21')
+# E[1,0] = mpm.exp(1j*mpm.mpf('2.21'))
+# print(E) #works as expected
+
+# A = mpm.linspace(2.,3.,5)
+# B = mpm.linspace(2.5,4.5,5)
+# C = mpm.matrix(np.concatenate([A,B]))
+# print(C[0])
+# print(type(C))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
