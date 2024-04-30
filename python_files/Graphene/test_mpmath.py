@@ -12,8 +12,7 @@ mpmA = mpm.matrix(A)
 # mpmB = mpm.matrix(B)
 # mpmC = mpm.matrix(C)
 
-print(mpmA)
-print(mpm.diag(mpmA))
+# print(mpmA)
 # print(mpmA, mpm.diag(mpm.diag(mpmA)))
 
 # print(np.linalg.inv(A@B@C))
@@ -53,7 +52,8 @@ print(mpm.diag(mpmA))
 # print(type(C))
 
 
-
+A = mpm.mpf(2.47563874653)
+print(A.to_fixed(256))
 
 
 
