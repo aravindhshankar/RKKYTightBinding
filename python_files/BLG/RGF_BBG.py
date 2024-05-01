@@ -138,15 +138,21 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 2e-3
+	omega = 2e-1
 	# omega = 2e-2
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
-	delta = 1e-6
-	RECURSIONS = 20
+	# kxvals = np.linspace(-0.2,0.2,10000,dtype=np.double)
+	# delta = min(1e-4,0.01*omega)
+	delta = 1e-4
+	# delta = 0.01*omega
+	RECURSIONS = 25
 	dimH = 8
+	start_time = time.perf_counter()
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
 					for omega in omegavals for kx in kxvals],dtype=np.longdouble).reshape((len(omegavals),len(kxvals),dimH,dimH))
+	elapsed = time.perf_counter() - start_time
+	print(f'Finished calculating kDOS in {elapsed} sec(s).')
 	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
 	peakvals = [kxvals[peak] for peak in peaks]
 	fig, ax = plt.subplots(1)
@@ -156,6 +162,7 @@ def test_Ginfkx():
 	# ax.vlines(kxvals[peaks], ls = '--', c = 'grey')
 	for peak in peakvals:
 		ax.axvline(peak,ls='--',c='gray')
+
 	# ax.legend()
 	# print('Started quad integrate without peaks')
 	# start_time = time.perf_counter()
@@ -174,9 +181,9 @@ def test_Ginfkx():
 	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	# print(f'intval = {intval:.5}')
 
-	for num_pp in [1000]: #checking convergence
+	for num_pp in [200]: #checking convergence
 		print('Started simpson integrate WITH peaks')
-		peak_spacing = 0.05
+		peak_spacing = 0.01
 		print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
 		start_time = time.perf_counter()
 		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
@@ -216,7 +223,7 @@ def test_LDOS_mp():
 	'''
 	Use scipy.quad for this
 	'''
-	RECURSIONS = 25
+	RECURSIONS = 22
 	delta = 1e-6
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)

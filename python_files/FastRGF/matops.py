@@ -1,3 +1,6 @@
+import mpmath as mpm
+
+
 def transposeMatrix(m):
     return map(list,zip(*m))
 
@@ -39,7 +42,7 @@ def getMatrixInverse(m):
 
 ############ Matrix multiplication ##############################
 
-def fixmul(A, B, prec):
+def fixmul(A, B, prec=128):
     m = A.rows; p = B.rows; n = B.cols;
     A = [[A[i,j].to_fixed(prec) for j in range(p)] for i in range(m)]
     B = [[B[i,j].to_fixed(prec) for j in range(n)] for i in range(p)]
@@ -50,7 +53,7 @@ def fixmul(A, B, prec):
             for k in range(p):
                 s += A[i][k] * B[k][j]
             C[i][j] = s
-    return mp.matrix(C) * mpf(2)**(-2*prec)
+    return mpm.matrix(C) * mpm.mpf(2)**(-2*prec)
 
 
 

@@ -1,5 +1,9 @@
 import mpmath as mpm
 import numpy as np
+import time 
+import sys 
+sys.path.insert(0,'..')
+from FastRGF.matops import getMatrixInverse, fixmul
 
 mpm.mp.dps=32
 
@@ -52,13 +56,35 @@ mpmA = mpm.matrix(A)
 # print(type(C))
 
 
-A = mpm.mpf(2.47563874653)
-print(A.to_fixed(256))
+# A = mpm.mpf(2.47563874653)
+# print(A.to_fixed(256))
 
+A = np.random.rand(16).reshape((4,4))
+mpmA = mpm.matrix(A)
 
+# start = time.perf_counter()
+# for i in range(20):
+# 	mpmA = mpmA * mpmA
+# stop = time.perf_counter()
+# print(f'Direct multiplication finished in {stop-start} sec')
 
+# start = time.perf_counter()
+# for i in range(20):
+# 	mpmA = fixmul(mpmA,mpmA,prec=64)
+# stop = time.perf_counter()
+# print(f'fixmul multiplication finished in {stop-start} sec')
 
+start = time.perf_counter()
+for i in range(50):
+	mpmA = (mpmA)**-1
+stop = time.perf_counter()
+print(f'Direct Inverse finished in {stop-start} sec')
 
+start = time.perf_counter()
+for i in range(50):
+	mpmA = getMatrixInverse(mpmA)
+stop = time.perf_counter()
+print(f'getMatrixInverse inverse finished in {stop-start} sec')
 
 
 
