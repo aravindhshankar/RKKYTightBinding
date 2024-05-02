@@ -14,10 +14,20 @@ import multiprocessing as mp
 from FastRGF.RGF import MOMfastrecDOSfull
 from h5_handler import *
 import concurrent.futures
+
+savename = 'default_savename'
+path_to_output = '../Outputs/BLG/'
 path_to_dump = '../Dump/BLG'
 if not os.path.exists(path_to_dump): 
 	os.makedirs(path_to_dump)
 	print('Dump directory created at ', path_to_dump)
+
+if not os.path.exists(path_to_output):
+    os.makedirs(path_to_output)
+    print("Outputs directory created at ", path_to_output)
+
+if len(sys.argv) > 1:
+    savename = str(sys.argv[1])
 
 ## Maybe you want to rewrite this section as data members of a class that you can inherit from
 ## Or even add these data quantities to a separate module which can be imported
@@ -138,13 +148,13 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 2e-1
+	omega = 2e-4
 	# omega = 2e-2
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# kxvals = np.linspace(-0.2,0.2,10000,dtype=np.double)
-	# delta = min(1e-4,0.01*omega)
-	delta = 1e-4
+	delta = min(1e-4,0.01*omega)
+	# delta = 1e-4
 	# delta = 0.01*omega
 	RECURSIONS = 25
 	dimH = 8
@@ -197,7 +207,8 @@ def test_Ginfkx():
 	plt.show()
 
 
-def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
+def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25,analyze=True,method = 'adaptive'):
+	delta = 1e-4 if omega>1e-3 else 1e-6
 	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 	if analyze == True:
 		kxgrid = np.linspace(-np.pi,np.pi,1000)
@@ -207,7 +218,7 @@ def helper_LDOS_mp(omega,delta,RECURSIONS,analyze=False,method = 'adaptive'):
 		if method == 'quad':
 			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
 		elif method == 'adaptive': 
-			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.005,num_uniform=500,num_pp=300)
+			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
 			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 			LDOS = simpson(fine_integrand,adaptive_kxgrid)
 		else: 
@@ -223,12 +234,12 @@ def test_LDOS_mp():
 	'''
 	Use scipy.quad for this
 	'''
-	RECURSIONS = 22
-	delta = 1e-6
+	RECURSIONS = 25
+	delta = 1e-4
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	# omegavals = make_omega_grid()
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = 100)
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(3000))
 
 	PROCESSES = mp.cpu_count()
 	startmp = time.perf_counter()
@@ -242,16 +253,18 @@ def test_LDOS_mp():
 	
 	savedict = {'omegavals' : omegavals,
 				'LDOS' : LDOS,
-				'INFO' : '[0,0] site of -1/pi Im G'
+				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
 				}
 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
+	savefileoutput = savename + '.h5'
+	dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
-	fig,ax = plt.subplots(1)
-	ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
-	# ax.axvline(1., ls='--', c='grey')
-	ax.set_xlabel('omega')
-	ax.set_title(f'Bilayer Graphene LDOS A site with $\\delta = $ {delta:.6}')
-	plt.show()
+	# fig,ax = plt.subplots(1)
+	# ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
+	# # ax.axvline(1., ls='--', c='grey')
+	# ax.set_xlabel('omega')
+	# ax.set_title(f'Bilayer Graphene LDOS A site with $\\delta = $ {delta:.6}')
+	# plt.show()
 
 
 
@@ -259,8 +272,8 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
-	test_Ginfkx()
-	# test_LDOS_mp()
+	# test_Ginfkx()
+	test_LDOS_mp()
 
 
 
