@@ -3,8 +3,8 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
-#SBATCH --mem=10G
-#SBATCH --time=0-3:00:00
+#SBATCH --mem=20G
+#SBATCH --time=0-0:15:00
 #SBATCH --partition=compAMD
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8

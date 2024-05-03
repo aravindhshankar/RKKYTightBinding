@@ -43,29 +43,7 @@ gamma1 = 0.381
 gamma3 = 0.38
 gamma4 = 0.14
 
-kwargs = {  'epsA1': epsA1, 
-			'epsA1': epsA1,
-			'epsA2': epsA2,
-			'epsB1': epsB1, 
-			'epsB2': epsB2,
-			'gamma0': gamma0, 
-			'gamma1': gamma1, 
-			'gamma3': gamma3, 
-			'gamma4': gamma4
-			}
 
-
-def f(k):
-	t1 = np.exp(1j*k[1]/np.sqrt(3))
-	t2 = 2 * np.exp(-1j * k[1]/(2*np.sqrt(3))) * np.cos(k[0]/2.)
-	return t1 + t2
-
-def Ham_BLG(k): 
-	ham = [ [epsA1, -gamma0*f(k), gamma4*f(k), -gamma3*np.conj(f(k))],
-			[-gamma0*np.conj(f(k)), epsB1, gamma1, gamma4*f(k)],
-			[gamma4*np.conj(f(k)), gamma1, epsA2, -gamma0*f(k)],
-			[-gamma3*f(k), gamma4*np.conj(f(k)), -gamma0*np.conj(f(k)), epsB2] ]
-	return np.array(ham)
 
 def ret_H0(kx):
 	Tx = np.zeros((8,8),dtype=np.cdouble)
@@ -207,30 +185,26 @@ def test_Ginfkx():
 	plt.show()
 
 
-def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25,analyze=True,method = 'adaptive'):
+def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25):
 	delta = 1e-4 if omega>1e-3 else 1e-6
-	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	# callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 	start_time = time.perf_counter()
 	print(f'omega = {omega:.6} entered')
-	if analyze == True:
-		kxgrid = np.linspace(-np.pi,np.pi,1000)
-		sparseLDOS = np.array([callintegrand(kx) for kx in kxgrid])
-		peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
-		breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
-		if method == 'quad':
-			LDOS = quad(callintegrand,-np.pi,np.pi,limit=100,points=breakpoints,epsabs=delta)[0] 
-		elif method == 'adaptive': 
-			adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
-			fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
-			LDOS = simpson(fine_integrand,adaptive_kxgrid)
-		else: 
-			raise Exception('Unkown method for integration')
-			exit(1)
-	else: 
-		LDOS = quad(callintegrand,-np.pi,np.pi,limit=50)[0] 
+	kxgrid = np.linspace(-np.pi,np.pi,1000,dtype=np.double)
+	# sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
+	# 				for kx in kxvals],dtype=np.longdouble).reshape((len(kxvals),dimH,dimH))
+	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+					for kx in kxgrid],dtype=np.longdouble)
+
+	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+	breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
+	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
+	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
 	elapsed = time.perf_counter() - start_time
 	print(f'omega = {omega:.6} finished in {elapsed} seconds.')
-	return LDOS
+	# return LDOS
+	return breakpoints
 
 
 
@@ -240,19 +214,14 @@ def test_LDOS_mp():
 	'''
 	RECURSIONS = 25
 	delta = 1e-4
-	# omegavals = np.linspace(0,3.1,512)
-	# omegavals = np.linspace(0,3.1,100)
-	# omegavals = make_omega_grid()
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(16))
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
 
-	# PROCESSES = mp.cpu_count()
-	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	PROCESSES = mp.cpu_count()
+	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
 	print(f'PROCESSES = {PROCESSES}')
 	startmp = time.perf_counter()
-	# with mp.Pool(PROCESSES) as pool:
-	# 	LDOS = pool.map(helper_LDOS_mp, omegavals)
 	with mp.Pool(PROCESSES) as pool:
-			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS), omegavals)
 			# r = pool.map_async(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
 			# LDOS = r.get()
 	stopmp = time.perf_counter()
