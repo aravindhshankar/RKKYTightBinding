@@ -210,6 +210,8 @@ def test_Ginfkx():
 def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25,analyze=True,method = 'adaptive'):
 	delta = 1e-4 if omega>1e-3 else 1e-6
 	callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	start_time = time.perf_counter()
+	print(f'omega = {omega:.6} entered')
 	if analyze == True:
 		kxgrid = np.linspace(-np.pi,np.pi,1000)
 		sparseLDOS = np.array([callintegrand(kx) for kx in kxgrid])
@@ -226,6 +228,8 @@ def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25,analyze=True,method = 'adaptiv
 			exit(1)
 	else: 
 		LDOS = quad(callintegrand,-np.pi,np.pi,limit=50)[0] 
+	elapsed = time.perf_counter() - start_time
+	print(f'omega = {omega:.6} finished in {elapsed} seconds.')
 	return LDOS
 
 
@@ -239,14 +243,18 @@ def test_LDOS_mp():
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	# omegavals = make_omega_grid()
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(3000))
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(16))
 
 	PROCESSES = mp.cpu_count()
+	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	print(f'PROCESSES = {PROCESSES}')
 	startmp = time.perf_counter()
 	# with mp.Pool(PROCESSES) as pool:
 	# 	LDOS = pool.map(helper_LDOS_mp, omegavals)
 	with mp.Pool(PROCESSES) as pool:
 			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			# r = pool.map_async(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			# LDOS = r.get()
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
@@ -257,7 +265,7 @@ def test_LDOS_mp():
 				}
 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
 	savefileoutput = savename + '.h5'
-	dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
+	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
 	# fig,ax = plt.subplots(1)
 	# ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
