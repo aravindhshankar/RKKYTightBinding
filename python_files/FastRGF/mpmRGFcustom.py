@@ -1,6 +1,6 @@
 import numpy as np 
 import mpmath as mpm
-from matops import getMatrixInverse
+from matops import getMatrixInverse,
 
 
 

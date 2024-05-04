@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=BLG_LDOS_00
+#SBATCH --job-name=v2BLG_LDOS_00
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
-#SBATCH --mem=20G
+#SBATCH --mem=10G
 #SBATCH --time=0-0:15:00
 #SBATCH --partition=compAMD
 #SBATCH --ntasks=1
@@ -20,6 +20,6 @@ echo "[$SHELL] Current working directory: $CWD"
 export file_name="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
 echo "[$SHELL] Running Python script"
 #
-python RGF_BBG.py "$file_name"
+python v2_RGF_BBG.py "$file_name"
 #
 echo "[$SHELL]#### SLURM script finished. "

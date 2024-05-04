@@ -2,10 +2,10 @@ import sys
 import os
 sys.path.insert(0,'..')
 import numpy as np
-from scipy.linalg import eigvals, eigvalsh
-import matplotlib.pyplot as plt
+# from scipy.linalg import eigvals, eigvalsh
+# import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
-from scipy.linalg import norm
+# from scipy.linalg import norm
 from scipy.integrate import simpson, quad
 from functools import partial
 import time 
@@ -185,12 +185,13 @@ def test_Ginfkx():
 	plt.show()
 
 
-def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25):
+def helper_LDOS_mp(omega):
+	RECURSIONS = 25
 	delta = 1e-4 if omega>1e-3 else 1e-6
 	# callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 	start_time = time.perf_counter()
-	print(f'omega = {omega:.6} entered')
-	kxgrid = np.linspace(-np.pi,np.pi,1000,dtype=np.double)
+	print(f'omega = {omega:.6} entered',flush=True)
+	kxgrid = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
 	# 				for kx in kxvals],dtype=np.longdouble).reshape((len(kxvals),dimH,dimH))
 	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
@@ -198,11 +199,11 @@ def helper_LDOS_mp(omega,delta=1e-4,RECURSIONS=25):
 
 	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
 	breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
-	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
-	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
-	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
+	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
+	fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+	LDOS = simpson(fine_integrand,adaptive_kxgrid)
 	elapsed = time.perf_counter() - start_time
-	print(f'omega = {omega:.6} finished in {elapsed} seconds.')
+	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
 	# return LDOS
 	return breakpoints
 
@@ -216,8 +217,8 @@ def test_LDOS_mp():
 	delta = 1e-4
 	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
 
-	PROCESSES = mp.cpu_count()
-	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	# PROCESSES = mp.cpu_count()
+	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
 	print(f'PROCESSES = {PROCESSES}')
 	startmp = time.perf_counter()
 	with mp.Pool(PROCESSES) as pool:
@@ -244,14 +245,34 @@ def test_LDOS_mp():
 	# plt.show()
 
 
-
-
-
-
 if __name__ == '__main__': 
 	# test_Ginfkx()
-	test_LDOS_mp()
+	# test_LDOS_mp()
+	RECURSIONS = 25
+	delta = 1e-4
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(16))
 
+	# PROCESSES = mp.cpu_count()
+	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	print(f'PROCESSES = {PROCESSES}')
+	startmp = time.perf_counter()
+	# with mp.Pool(PROCESSES) as pool:
+	# 		# LDOS = pool.map(helper_LDOS_mp, omegavals)
+	# 		r = pool.map_async(helper_LDOS_mp, omegavals)
+	# 		LDOS = r.get()
+	with concurrent.futures.ThreadPoolExecutor(max_workers=PROCESSES) as pool:
+		LDOS = list(pool.map(helper_LDOS_mp, omegavals))
+	stopmp = time.perf_counter()
+	elapsedmp = stopmp-startmp
+	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
+	
+	savedict = {'omegavals' : omegavals,
+				'LDOS' : LDOS,
+				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
+				}
+	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
+	savefileoutput = savename + '.h5'
+	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
 
 
