@@ -3,8 +3,8 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
-#SBATCH --mem=10G
-#SBATCH --time=0-0:15:00
+#SBATCH --mem-per-cpu=1G
+#SBATCH --time=0-0:20:00
 #SBATCH --partition=compAMD
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -20,6 +20,6 @@ echo "[$SHELL] Current working directory: $CWD"
 export file_name="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
 echo "[$SHELL] Running Python script"
 #
-python v2_RGF_BBG.py "$file_name"
+python -OO v2_RGF_BBG.py "$file_name"
 #
 echo "[$SHELL]#### SLURM script finished. "

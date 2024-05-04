@@ -197,15 +197,16 @@ def helper_LDOS_mp(omega):
 	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 					for kx in kxgrid],dtype=np.longdouble)
 
-	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
-	breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
-	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
-	fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
-	LDOS = simpson(fine_integrand,adaptive_kxgrid)
+	# peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+	# breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
+	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
+	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
+	LDOS = simpson(sparseLDOS,kxgrid)
 	elapsed = time.perf_counter() - start_time
 	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
-	# return LDOS
-	return breakpoints
+	return LDOS
+	# return breakpoints
 
 
 
@@ -250,7 +251,7 @@ if __name__ == '__main__':
 	# test_LDOS_mp()
 	RECURSIONS = 25
 	delta = 1e-4
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(16))
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
 
 	# PROCESSES = mp.cpu_count()
 	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
