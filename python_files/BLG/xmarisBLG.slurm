@@ -4,10 +4,11 @@
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
 #SBATCH --mem-per-cpu=1G
-#SBATCH --time=0-0:20:00
-#SBATCH --partition=compAMD
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --time=0-4:00:00
+#SBATCH --partition=compIntel
+#SBATCH --nodes=1
+#SBATCH --ntasks=32
+#SBATCH --exclusive
 #
 module load Python/3.10.8-GCCcore-12.2.0
 #

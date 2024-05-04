@@ -1,3 +1,5 @@
+### REWRITE USING JOB ARRAY a-la stefano
+
 import sys 
 import os
 sys.path.insert(0,'..')
@@ -14,10 +16,6 @@ import multiprocessing as mp
 from FastRGF.RGF import MOMfastrecDOSfull
 from h5_handler import *
 import concurrent.futures
-from dask.distributed import Client
-
-
-
 
 savename = 'default_savename'
 path_to_output = '../Outputs/BLG/'
@@ -201,12 +199,12 @@ def helper_LDOS_mp(omega):
 	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 					for kx in kxgrid],dtype=np.longdouble)
 
-	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
-	breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
-	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
-	fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
-	LDOS = simpson(fine_integrand,adaptive_kxgrid)
-	# LDOS = simpson(sparseLDOS,kxgrid)
+	# peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+	# breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
+	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
+	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
+	LDOS = simpson(sparseLDOS,kxgrid)
 	elapsed = time.perf_counter() - start_time
 	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
 	return LDOS
@@ -222,14 +220,14 @@ def test_LDOS_mp():
 	delta = 1e-4
 	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
 
-	PROCESSES = mp.cpu_count()
-	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	# PROCESSES = mp.cpu_count()
+	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
 	print(f'PROCESSES = {PROCESSES}')
 	startmp = time.perf_counter()
 	with mp.Pool(PROCESSES) as pool:
-			# LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS), omegavals)
-			r = pool.map_async(helper_LDOS_mp, omegavals)
-			LDOS = r.get()
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS), omegavals)
+			# r = pool.map_async(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			# LDOS = r.get()
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
@@ -250,55 +248,26 @@ def test_LDOS_mp():
 	# plt.show()
 
 
-# if __name__ == '__main__': 
-# 	# test_Ginfkx()
-# 	# test_LDOS_mp()
-# 	RECURSIONS = 25
-# 	delta = 1e-4
-# 	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
-
-# 	PROCESSES = mp.cpu_count()
-# 	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
-# 	print(f'PROCESSES = {PROCESSES}')
-# 	startmp = time.perf_counter()
-# 	with mp.Pool(PROCESSES) as pool:
-# 			LDOS = pool.map(helper_LDOS_mp, omegavals)
-# 			# r = pool.map_async(helper_LDOS_mp, omegavals)
-# 			# LDOS = r.get()
-# 	# with concurrent.futures.ThreadPoolExecutor(max_workers=PROCESSES) as pool:
-# 	# 	LDOS = list(pool.map(helper_LDOS_mp, omegavals))
-# 	stopmp = time.perf_counter()
-# 	elapsedmp = stopmp-startmp
-# 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
-	
-# 	savedict = {'omegavals' : omegavals,
-# 				'LDOS' : LDOS,
-# 				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
-# 				}
-# 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
-# 	savefileoutput = savename + '.h5'
-# 	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
-
-
-
-def dask_LDOS():
+if __name__ == '__main__': 
+	# test_Ginfkx()
+	# test_LDOS_mp()
 	RECURSIONS = 25
 	delta = 1e-4
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(3200))
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
 
-	# PROCESSES = mp.cpu_count()
+	PROCESSES = mp.cpu_count()
 	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
-	PROCESSES = int(32)
-
 	print(f'PROCESSES = {PROCESSES}')
-	client = Client(threads_per_worker=1, n_workers=PROCESSES)
-
 	startmp = time.perf_counter()
-	LDOS = client.gather(client.map(helper_LDOS_mp,omegavals))
+	# with mp.Pool(PROCESSES) as pool:
+	# 		# LDOS = pool.map(helper_LDOS_mp, omegavals)
+	# 		r = pool.map_async(helper_LDOS_mp, omegavals)
+	# 		LDOS = r.get()
+	with concurrent.futures.ThreadPoolExecutor(max_workers=PROCESSES) as pool:
+		LDOS = list(pool.map(helper_LDOS_mp, omegavals))
 	stopmp = time.perf_counter()
-
 	elapsedmp = stopmp-startmp
-	print(f'DASK parrallelization with {PROCESSES} processes finished in time {elapsedmp} seconds')
+	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
 	
 	savedict = {'omegavals' : omegavals,
 				'LDOS' : LDOS,
@@ -306,13 +275,13 @@ def dask_LDOS():
 				}
 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
 	savefileoutput = savename + '.h5'
-	dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
+	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
 
 
 
-if __name__=='__main__':
-	# test_LDOS_mp()
-	dask_LDOS()
+
+
+
 
 
