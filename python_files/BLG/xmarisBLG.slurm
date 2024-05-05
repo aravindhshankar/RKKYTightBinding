@@ -4,7 +4,7 @@
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
 #SBATCH --mem-per-cpu=1G
-#SBATCH --time=0-6:00:00
+#SBATCH --time=0-10:00:00
 #SBATCH --partition=compIntel
 #SBATCH --nodes=1
 #SBATCH --ntasks=32
