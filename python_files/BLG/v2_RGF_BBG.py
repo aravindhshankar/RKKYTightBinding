@@ -203,7 +203,7 @@ def helper_LDOS_mp(omega):
 
 	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
 	breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
-	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
+	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=20000,num_pp=1000,dtype=np.double)
 	fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 	LDOS = simpson(fine_integrand,adaptive_kxgrid)
 	# LDOS = simpson(sparseLDOS,kxgrid)

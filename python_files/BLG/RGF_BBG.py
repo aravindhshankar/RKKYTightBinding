@@ -243,7 +243,7 @@ def test_LDOS_mp():
 	# omegavals = np.linspace(0,3.1,512)
 	# omegavals = np.linspace(0,3.1,100)
 	# omegavals = make_omega_grid()
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(16))
 
 	# PROCESSES = mp.cpu_count()
 	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
@@ -251,12 +251,10 @@ def test_LDOS_mp():
 	startmp = time.perf_counter()
 	# with mp.Pool(PROCESSES) as pool:
 	# 	LDOS = pool.map(helper_LDOS_mp, omegavals)
-	# with mp.Pool(PROCESSES) as pool:
-	# 		LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
-	# 		# r = pool.map_async(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
-	# 		# LDOS = r.get()
-	with concurrent.futures.ThreadPoolExecutor() as pool:
-		LDOS = list(pool.map(helper_LDOS_mp, omegavals))
+	with mp.Pool(PROCESSES) as pool:
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			# r = pool.map_async(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			# LDOS = r.get()
 	stopmp = time.perf_counter()
 	elapsedmp = stopmp-startmp
 	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
