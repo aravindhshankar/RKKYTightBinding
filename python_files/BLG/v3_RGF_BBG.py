@@ -15,7 +15,8 @@ import multiprocessing as mp
 # from FastRGF import MOMfastrecDOSfull
 from FastRGF.RGF import MOMfastrecDOSfull
 from h5_handler import *
-import concurrent.futures
+# import concurrent.futures
+from dask.distributed import Client
 
 savename = 'default_savename'
 path_to_output = '../Outputs/BLG/'
@@ -179,7 +180,7 @@ def test_Ginfkx():
 		ranges += [(current, peak-eta)]
 		current = peak+eta
 	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=200)[0] for window in ranges]
+	intlist = [quad(call_int,window[0],window[1],limit=200,epsabs=0.1*delta)[0] for window in ranges]
 	# print(intlist)
 	intval = np.sum(intlist)
 
@@ -205,29 +206,67 @@ def test_Ginfkx():
 
 
 def helper_LDOS_mp(omega):
-	RECURSIONS = 25
+	RECURSIONS = 20
 	delta = 1e-4 if omega>1e-3 else 1e-6
 	# callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 	start_time = time.perf_counter()
 	print(f'omega = {omega:.6} entered',flush=True)
-	kxgrid = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
+	kxgrid = np.linspace(-np.pi,np.pi,20000,dtype=np.double)
 	# sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
 	# 				for kx in kxvals],dtype=np.longdouble).reshape((len(kxvals),dimH,dimH))
 	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 					for kx in kxgrid],dtype=np.longdouble)
 
-	# peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
-	# breakpoints = [kxgrid[peak] for peak in peaks] #peakvals
+	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+	peakvals = [kxgrid[peak] for peak in peaks] #peakvals
 	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
 	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
 	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
-	LDOS = simpson(sparseLDOS,kxgrid)
+	# LDOS = simpson(sparseLDOS,kxgrid)
+	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	start,stop = -np.pi,np.pi
+	ranges = []
+	peakvals = sorted(peakvals)
+	# eta = 0.5*delta
+	eta = 1.*delta
+	current = start
+	for peak in peakvals:
+		ranges += [(current, peak-eta)]
+		current = peak+eta
+	ranges += [(current, stop)]		
+	intlist = [quad(call_int,window[0],window[1],limit=200,epsabs=0.1*delta)[0] for window in ranges]
+	LDOS = np.sum(intlist)
 	elapsed = time.perf_counter() - start_time
 	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
 	return LDOS
-	# return breakpoints
 
+def dask_LDOS():
+	RECURSIONS = 20
+	delta = 1e-4
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(3200))
 
+	# PROCESSES = mp.cpu_count()
+	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	# PROCESSES = int(32)
+	PROCESSES = 32
+
+	print(f'PROCESSES = {PROCESSES}')
+	client = Client(threads_per_worker=1, n_workers=PROCESSES)
+
+	startmp = time.perf_counter()
+	LDOS = client.gather(client.map(helper_LDOS_mp,omegavals))
+	stopmp = time.perf_counter()
+
+	elapsedmp = stopmp-startmp
+	print(f'DASK parrallelization with {PROCESSES} processes finished in time {elapsedmp} seconds')
+	
+	savedict = {'omegavals' : omegavals,
+				'LDOS' : LDOS,
+				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
+				}
+	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
+	savefileoutput = savename + '.h5'
+	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
 def test_LDOS_mp():
 	'''
@@ -266,7 +305,8 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
-	test_Ginfkx()
+	# test_Ginfkx()
+	dask_LDOS()
 	# test_LDOS_mp()
 
 
