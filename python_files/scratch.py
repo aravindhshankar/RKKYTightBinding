@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.linalg import eigvals,eigvalsh
 import multiprocessing as mp
 from scipy.integrate import quad
+from scipy.signal import find_peaks
 
 def m1():
 	ivals = np.array([1,2,3])
@@ -49,11 +50,31 @@ def test_quad_vec():
 	integrand = lambda x: np.eye(2) * np.sin(x)
 	vec_quad = np.vectorize(quad)
 	intval = vec_quad(integrand, 0,np.pi)
-	print(inval)
+	print(intval)
+
+
+def interval_makers_tester():
+	A = [1,2,3,4,5,4,3,2,1]
+	checker = find_peaks(A)[0]
+	print(type(checker))
+	peaks = []
+	start = 0
+	stop = 10
+	ranges = []
+	peaks = sorted(peaks)
+	current = start
+	eta = 0.1
+	for peak in peaks:
+		ranges += [(current, peak-eta)]
+		current = peak+eta
+	ranges += [(current, stop)]
+	print(ranges)
+	#works even for empty set
+
 
 
 
 if __name__ == '__main__':
 	# test_mp()
-	test_quad_vec()
+	interval_makers_tester()
 

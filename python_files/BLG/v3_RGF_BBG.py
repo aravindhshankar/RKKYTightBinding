@@ -5,7 +5,7 @@ import os
 sys.path.insert(0,'..')
 import numpy as np
 # from scipy.linalg import eigvals, eigvalsh
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 # from scipy.linalg import norm
 from scipy.integrate import simpson, quad
@@ -128,15 +128,16 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 2e-4
+	omega = 2e-3
 	# omega = 2e-2
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# kxvals = np.linspace(-0.2,0.2,10000,dtype=np.double)
-	delta = min(1e-4,0.01*omega)
+	# delta = min(1e-4,0.01*omega)
+	delta = 1e-4 if omega>1e-3 else 1e-6
 	# delta = 1e-4
 	# delta = 0.01*omega
-	RECURSIONS = 25
+	RECURSIONS = 20
 	dimH = 8
 	start_time = time.perf_counter()
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
@@ -144,6 +145,7 @@ def test_Ginfkx():
 	elapsed = time.perf_counter() - start_time
 	print(f'Finished calculating kDOS in {elapsed} sec(s).')
 	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
+	print(type(peaks))
 	peakvals = [kxvals[peak] for peak in peaks]
 	fig, ax = plt.subplots(1)
 	ax.plot(kxvals, kDOS[0,:,0,0])
@@ -163,13 +165,28 @@ def test_Ginfkx():
 	# print(f'intval = {intval:.5}')
 
 
-	# print('Started quad integrate WITH peaks')
-	# start_time = time.perf_counter()
-	# intval = quad(lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0], 
-	# 					-np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
-	# elapsed = time.perf_counter() - start_time
-	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	# print(f'intval = {intval:.5}')
+	print('Started quad integrate WITH peaks')
+	start_time = time.perf_counter()
+	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+
+	start,stop = -np.pi,np.pi
+	ranges = []
+	peakvals = sorted(peakvals)
+	# eta = 0.5*delta
+	eta = 1.*delta
+	current = start
+	for peak in peakvals:
+		ranges += [(current, peak-eta)]
+		current = peak+eta
+	ranges += [(current, stop)]		
+	intlist = [quad(call_int,window[0],window[1],limit=200)[0] for window in ranges]
+	# print(intlist)
+	intval = np.sum(intlist)
+
+	# intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
+	elapsed = time.perf_counter() - start_time
+	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	print(f'intval = {intval:.5}')
 
 	for num_pp in [200]: #checking convergence
 		print('Started simpson integrate WITH peaks')
@@ -249,33 +266,8 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
-	# test_Ginfkx()
+	test_Ginfkx()
 	# test_LDOS_mp()
-	RECURSIONS = 25
-	delta = 1e-4
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
-
-	PROCESSES = mp.cpu_count()
-	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
-	print(f'PROCESSES = {PROCESSES}')
-	startmp = time.perf_counter()
-	# with mp.Pool(PROCESSES) as pool:
-	# 		# LDOS = pool.map(helper_LDOS_mp, omegavals)
-	# 		r = pool.map_async(helper_LDOS_mp, omegavals)
-	# 		LDOS = r.get()
-	with concurrent.futures.ThreadPoolExecutor(max_workers=PROCESSES) as pool:
-		LDOS = list(pool.map(helper_LDOS_mp, omegavals))
-	stopmp = time.perf_counter()
-	elapsedmp = stopmp-startmp
-	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
-	
-	savedict = {'omegavals' : omegavals,
-				'LDOS' : LDOS,
-				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
-				}
-	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
-	savefileoutput = savename + '.h5'
-	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
 
 
