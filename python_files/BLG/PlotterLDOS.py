@@ -10,7 +10,7 @@ if not os.path.exists(path_to_dump):
 	raise Exception('Path to dump not found')
 	exit(1)
 
-filename = 'v2BLG_LDOS_00_4053680.h5'
+filename = 'v2BLG_LDOS_00_4080020.h5'
 try:
 	load_dict = h52dict(os.path.join(path_to_dump,filename))
 except FileNotFoundError:
@@ -25,7 +25,7 @@ fig,ax = plt.subplots(2)
 ax[0].plot(omegavals, LDOS, '.-', label = 'LDOS')
 ax[0].axvline(1., ls='--', c='grey')
 ax[0].set_xlabel('omega')
-ax[0].set_title(f'Graphene LDOS A site with $ ')
+ax[0].set_title('BLG LDOS A site ' + str(load_dict['INFO']))
 
 ax[1].loglog(omegavals[omegavals<1],LDOS[omegavals<1])
 ax[1].set_xlabel('omega')
