@@ -1,0 +1,2 @@
+ ssh -o ProxyCommand="ssh -W %h:%p shankar@styx.lorentz.leidenuniv.nl" shankar@xmaris.lorentz.leidenuniv.nl
+sftp -v -o ProxyCommand="ssh -W %h:%p shankar@styx.lorentz.leidenuniv.nl" shankar@xmaris.lorentz.leidenuniv.nl

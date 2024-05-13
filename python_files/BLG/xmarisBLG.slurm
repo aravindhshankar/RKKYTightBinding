@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=v2BLG_LDOS_00
+#SBATCH --job-name=v3BLG_LDOS_00
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
 #SBATCH --mem-per-cpu=1G
-#SBATCH --time=0-10:00:00
+#SBATCH --time=0-12:00:00
 #SBATCH --partition=compIntel
 #SBATCH --nodes=1
 #SBATCH --ntasks=32
@@ -21,6 +21,6 @@ echo "[$SHELL] Current working directory: $CWD"
 export file_name="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
 echo "[$SHELL] Running Python script"
 #
-python -OO v2_RGF_BBG.py "$file_name"
+python -OO v3_RGF_BBG.py "$file_name"
 #
 echo "[$SHELL]#### SLURM script finished. "

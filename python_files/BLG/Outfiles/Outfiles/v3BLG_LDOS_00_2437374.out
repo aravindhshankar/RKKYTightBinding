@@ -1,0 +1,37 @@
+[/bin/bash] ## This is shankaras1 on #HOSTNAME and job ID 2437374
+[/bin/bash] Current working directory: /home/shankaras1/data1/python_files/BLG
+[/bin/bash] Running Python script
+PROCESSES = 32
+omega = 1e-06 entered
+omega = 2.37201e-06 entered
+omega = 3.65322e-06 entered
+omega = 5.62645e-06 entered
+omega = 1.54013e-06 entered
+omega = 2.05547e-05 entered
+omega = 1.3346e-05 entered
+omega = 0.00237714 entered
+omega = 8.66549e-06 entered
+omega = 0.00011565 entered
+omega = 7.50907e-05 entered
+omega = 4.87559e-05 entered
+omega = 3.16569e-05 entered
+omega = 0.00100216 entered
+omega = 0.423407 entered
+omega = 0.000422494 entered
+omega = 0.000178116 entered
+omega = 0.000274323 entered
+omega = 0.00154346 entered
+omega = 0.0205991 entered
+omega = 0.00868422 entered
+omega = 0.0317254 entered
+omega = 0.00563861 entered
+omega = 0.00366112 entered
+omega = 0.0133749 entered
+omega = 0.000650698 entered
+omega = 0.1159 entered
+omega = 0.178501 entered
+omega = 0.0488613 entered
+omega = 0.075253 entered
+omega = 0.652104 entered
+omega = 0.274916 entered
+slurmstepd: error: *** JOB 2437374 ON node865 CANCELLED AT 2024-05-08T21:11:08 ***

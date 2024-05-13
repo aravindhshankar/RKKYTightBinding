@@ -1,0 +1,6 @@
+numpy==1.26.4 
+scipy==1.10.0
+mpmath
+matplotlib
+h5py
+dask[complete]==2022.7.0

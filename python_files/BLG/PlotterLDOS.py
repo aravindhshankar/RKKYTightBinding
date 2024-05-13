@@ -10,7 +10,9 @@ if not os.path.exists(path_to_dump):
 	raise Exception('Path to dump not found')
 	exit(1)
 
-filename = 'v2BLG_LDOS_00_4080020.h5'
+# filename = 'v3BLG_LDOS_00_2439941.h5'
+# filename = 'v3BLG_LDOS_11_2441853.h5'
+filename = 'v3BLG_LDOS_22_2441872.h5'
 try:
 	load_dict = h52dict(os.path.join(path_to_dump,filename))
 except FileNotFoundError:
