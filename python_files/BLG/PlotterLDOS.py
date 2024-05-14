@@ -12,7 +12,7 @@ if not os.path.exists(path_to_dump):
 
 # filename = 'v3BLG_LDOS_00_2439941.h5'
 # filename = 'v3BLG_LDOS_11_2441853.h5'
-filename = 'v3BLG_LDOS_22_2441872.h5'
+filename = 'v4BLG_LDOS_11_2445250.h5'
 try:
 	load_dict = h52dict(os.path.join(path_to_dump,filename))
 except FileNotFoundError:
@@ -25,7 +25,7 @@ LDOS = np.array(load_dict['LDOS'])
 print(load_dict['INFO'])
 fig,ax = plt.subplots(2)
 ax[0].plot(omegavals, LDOS, '.-', label = 'LDOS')
-ax[0].axvline(1., ls='--', c='grey')
+ax[0].axvline(1e-3, ls='--', c='grey')
 ax[0].set_xlabel('omega')
 ax[0].set_title('BLG LDOS A site ' + str(load_dict['INFO']))
 

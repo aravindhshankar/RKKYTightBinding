@@ -1,14 +1,15 @@
 #!/bin/bash
-#SBATCH --job-name=v3BLG_LDOS_00
+#SBATCH --job-name=v4BLG_LDOS_11
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
-#SBATCH --mem-per-cpu=1G
-#SBATCH --time=0-12:00:00
-#SBATCH --partition=compIntel
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=0-4:00:00
+#SBATCH --partition=cpu-short
 #SBATCH --nodes=1
-#SBATCH --ntasks=32
-#SBATCH --exclusive
+#SBATCH --ntasks=24
+##SBATCH --exclusive
+#SBATCH --cpus-per-task=1
 #
 module load Python/3.10.8-GCCcore-12.2.0
 #
@@ -21,6 +22,6 @@ echo "[$SHELL] Current working directory: $CWD"
 export file_name="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
 echo "[$SHELL] Running Python script"
 #
-python -OO v3_RGF_BBG.py "$file_name"
+python v4_RGF_BBG.py "$file_name"
 #
 echo "[$SHELL]#### SLURM script finished. "

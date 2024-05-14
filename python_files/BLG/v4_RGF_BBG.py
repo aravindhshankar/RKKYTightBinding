@@ -127,8 +127,9 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 2e-3 
-	# omega = 0.000444967
+	# omega = 2e-3 
+	omega = 0.000444967
+	# omega = 0.000740532
 	# omega = 2e-2
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
@@ -146,8 +147,8 @@ def test_Ginfkx():
 	elapsed = time.perf_counter() - start_time
 	print(f'Finished calculating kDOS in {elapsed} sec(s).')
 	# peaks = find_peaks(kDOS[0,:,0,0],prominence=0.01*np.max(kDOS[0,:,0,0]))[0]
-	peaks = find_peaks(kDOS[0,:,0,0])[0]
-	print(type(peaks))
+	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1)[0]
+	print(f'Peaks found on sparse grid : {len(peaks)}')
 	peakvals = [kxvals[peak] for peak in peaks]
 	print("creating fine grid")
 	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
@@ -155,7 +156,7 @@ def test_Ginfkx():
 
 	print('finding additional peaks')
 	# new_peaks = find_peaks(fine_integrand,prominence=0.01*np.max(fine_integrand))[0]
-	new_peaks = find_peaks(fine_integrand)[0]
+	new_peaks = find_peaks(fine_integrand,prominence=0.1)[0]
 	new_peakvals = [adaptive_kxgrid[peak] for peak in new_peaks]
 	new_peakvals = sorted(new_peakvals)
 
@@ -229,33 +230,40 @@ def test_Ginfkx():
 def helper_LDOS_mp(omega):
 	RECURSIONS = 20
 	delta = 1e-4 if omega>1e-3 else 1e-6
-	# callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	num_pp = 1000
+	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[1,1]
 	start_time = time.perf_counter()
 	print(f'omega = {omega:.6} entered',flush=True)
 	kxgrid = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
 	# 				for kx in kxvals],dtype=np.longdouble).reshape((len(kxvals),dimH,dimH))
-	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
-					for kx in kxgrid],dtype=np.longdouble)
-
-	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+	sparseLDOS = np.array([call_int(kx) for kx in kxgrid],dtype=np.double)
+	peaks = find_peaks(sparseLDOS,prominence=0.01)[0]
 	peakvals = [kxgrid[peak] for peak in peaks] #peakvals
-	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
-	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
-	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
-	# LDOS = simpson(sparseLDOS,kxgrid)
-	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	peakvals = sorted(peakvals)
+
+	if len(peakvals) > 20:
+		return float('NaN')
+
+	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+	fine_integrand = np.array([call_int(kx) for kx in adaptive_kxgrid],dtype=np.double)
+	new_peaks = find_peaks(fine_integrand,prominence=0.01)[0]
+	new_peakvals = [adaptive_kxgrid[peak] for peak in new_peaks]
+	new_peakvals = sorted(new_peakvals)
+
+	if len(new_peakvals) > 25:
+		return float('NaN')
+
 	start,stop = -np.pi,np.pi
 	ranges = []
-	peakvals = sorted(peakvals)
 	# eta = 0.5*delta
-	eta = 1.*delta
+	eta = 0.5*delta
 	current = start
-	for peak in peakvals:
+	for peak in new_peakvals:
 		ranges += [(current, peak-eta)]
 		current = peak+eta
 	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=200,epsabs=0.1*delta)[0] for window in ranges]
+	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
 	LDOS = np.sum(intlist)
 	elapsed = time.perf_counter() - start_time
 	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
@@ -264,12 +272,12 @@ def helper_LDOS_mp(omega):
 def dask_LDOS():
 	RECURSIONS = 20
 	delta = 1e-4
-	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(3200))
+	omegavals = np.logspace(np.log10(1e-5), np.log10(1e-1), num = int(2040))
 
 	# PROCESSES = mp.cpu_count()
 	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
 	# PROCESSES = int(32)
-	PROCESSES = 32
+	PROCESSES = 24
 
 	print(f'PROCESSES = {PROCESSES}')
 	client = Client(threads_per_worker=1, n_workers=PROCESSES)
@@ -283,7 +291,7 @@ def dask_LDOS():
 	
 	savedict = {'omegavals' : omegavals,
 				'LDOS' : LDOS,
-				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
+				'INFO' : '[1,1] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
 				}
 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
 	savefileoutput = savename + '.h5'
@@ -326,8 +334,8 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
-	test_Ginfkx()
-	# dask_LDOS()
+	# test_Ginfkx()
+	dask_LDOS()
 	# test_LDOS_mp()
 
 
