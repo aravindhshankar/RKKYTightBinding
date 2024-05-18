@@ -35,5 +35,8 @@ def simple():
 	print(f'Int with breakpoints = {intwithbreakpoints}')
 
 
+
+##### Now test integrating just the singularities in graphene/BLG - check how much precision is needed in the breakpoint
+
 if __name__ == '__main__':
 	simple()
