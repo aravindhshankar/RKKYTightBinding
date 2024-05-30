@@ -132,7 +132,9 @@ def retmpm_H0(kx):
 	return M 
 
 def retmpm_Ty(kx):
-	# non-hermitian : only couples along -ve y direction
+	'''
+	 non-hermitian : only couples along -ve y direction
+	'''
 	Ty = mpm.zeros(8)
 	Ty[0,2] = -gamma0
 	Ty[0,3] = gamma4
@@ -145,15 +147,20 @@ def retmpm_Ty(kx):
 	Ty[7,4] = gamma4
 	Ty[7,5] = -gamma0
 
+	return Ty
+
+
 def rel_timing():
 	RECURSIONS = 25
 	delta = 1e-5
 	kx = 1.3
 	omega = 0.2
 	start = time.perf_counter()
-	# Gnp = RGFnp(omega, retnp_H0(kx), retnp_Ty(kx), RECURSIONS, delta)
-	# stop = time.perf_counter()
-	# print(f'Gnp = {Gnp} calculated in {(stop-start):.4f} seconds.')
+	Gnp = RGFnp(omega, retnp_H0(kx), retnp_Ty(kx), RECURSIONS, delta)
+	stop = time.perf_counter()
+	print(f'Gnp = {Gnp} calculated in {(stop-start):.4f} seconds.')
+	# print(retmpm_Ty(kx))
+	# print(type(retmpm_Ty(kx)))
 
 	start = time.perf_counter()
 	Gmpm = RGFmpm(mpm.mpf(omega), retmpm_H0(mpm.mpf(kx)), retmpm_Ty(mpm.mpf(kx)), RECURSIONS, mpm.mpf(delta))
