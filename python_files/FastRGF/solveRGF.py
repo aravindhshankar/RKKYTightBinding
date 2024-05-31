@@ -1,10 +1,11 @@
 import numpy as np 
 from scipy.linalg import inv as scipy_inv
 
+#Use the Ainv@y = nplinalg.solve(A,y)
 
-# custinv = np.linalg.inv
+custinv = np.linalg.inv
 # custinv = scipy_inv
-custinv = lambda A: np.linalg.solve(A.T.dot(A), A.T)
+#custinv = lambda A: np.linalg.solve(A.T.dot(A), A.T)
 
 def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	'''
@@ -13,17 +14,17 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	'''
 	dimH = H0.shape[0] #Assumes that H is a square matrix 
 	G0inv = (omega+1j*delta)*np.eye(dimH,dtype=np.cdouble) - H0
-	G =   custinv(G0inv) #Initialize G to G0
+	G = custinv(G0inv) #Initialize G to G0
 	Tydag = Ty.conj().T
 
-	tnf = G@Tydag
-	tnb = G@Ty
+	tnf = np.linalg.solve(G0inv,Tydag)
+	tnb = np.linalg.solve(G0inv,Ty)
 	T = tnf
 	tprod = tnb
 	for itern in range(RECURSIONS):
-		tmp = custinv(np.eye(dimH,dtype=np.cdouble) - tnf@tnb - tnb@tnf)
-		tnf = tmp@tnf@tnf
-		tnb = tmp@tnb@tnb
+		tmpinv = np.eye(dimH,dtype=np.cdouble) - tnf@tnb - tnb@tnf
+		tnf = np.linalg.solve(tmpinv,tnf@tnf)
+		tnb = np.linalg.solve(tmpinv,tnb@tnb)
 		T = T + tprod@tnf
 		tprod = tprod@tnb
 	Gn = custinv(G0inv - Ty@T)

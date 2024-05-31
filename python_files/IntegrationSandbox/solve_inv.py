@@ -12,8 +12,20 @@ def test_singlemat():
 	print('Scipy inv', spinv)
 	print('solver inv', linv_A)
 
+
+def invmatmul():
+	A = np.array([[1,2],[3,4]])
+	y = np.array([[3,4],[5,6]])
+	npinv = np.linalg.inv(A)
+	# linv_A = np.linalg.solve(A.T.dot(A), A.T)
+	naive = npinv@y
+	print('naive:', naive)
+	solved = np.linalg.solve(A,y)
+	print('solved:', solved)
+
+
 def main():
-	test_singlemat()
+	invmatmul()
 
 if __name__ == '__main__':
 	main()
