@@ -11,7 +11,7 @@ from functools import partial
 import time 
 import multiprocessing as mp
 # from FastRGF import MOMfastrecDOSfull
-from FastRGF.RGF import MOMfastrecDOSfull
+from FastRGF.solveRGF import MOMfastrecDOSfull
 from h5_handler import *
 # import concurrent.futures
 from dask.distributed import Client
@@ -127,16 +127,16 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	# omega = 2e-3 
-	omega = 0.000444967
+	omega = 2e-3 
+	# omega = 0.000444967
 	# omega = 0.000740532
 	# omega = 2e-2
 	omegavals = (omega,)
 	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# kxvals = np.linspace(-0.2,0.2,10000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
-	delta = 1e-4 if omega>1e-3 else 1e-6
-	# delta = 1e-4
+	# delta = 1e-4 if omega>1e-3 else 1e-6
+	delta = 1e-6
 	# delta = 0.01*omega
 	RECURSIONS = 20
 	dimH = 8
@@ -334,8 +334,8 @@ def test_LDOS_mp():
 
 
 if __name__ == '__main__': 
-	# test_Ginfkx()
-	dask_LDOS()
+	test_Ginfkx()
+	# dask_LDOS()
 	# test_LDOS_mp()
 
 
