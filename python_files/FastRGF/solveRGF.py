@@ -16,6 +16,10 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	dimH = H0.shape[0] #Assumes that H is a square matrix 
 	G0inv = (omega+1j*delta)*np.eye(dimH,dtype=np.cdouble) - H0
 	G = custinv(G0inv) #Initialize G to G0
+	if np.isnan(G).any() or np.isinf(G).any():
+		flag = False
+		print(f"FOUND overflow in G FIRST")
+		return np.zeros_like(G0inv), flag
 	Tydag = Ty.conj().T
 
 	tnf = np.linalg.solve(G0inv,Tydag)

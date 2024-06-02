@@ -25,12 +25,12 @@ def invmatmul():
 
 
 def scratch():
-	# x = np.array([np.inf, np.nan, 3.23 + 3.34j])
-	# print(x)
-	# print(np.isnan(x).any())
-	x = np.array([[2,3],[5,6]], dtype = np.cdouble)
-	x0 = np.zeros_like(x,dtype=np.double)
-	print(x0, type(x0), type(x0[0,0]))
+	x = np.array([np.inf, np.nan, 3.23 + 3.34j, np.inf + 2.3j, 2.1 - np.inf*1j, np.nan+1j])
+	print(x)
+	print([np.isnan(xval) or np.isinf(xval) for xval in x])
+	# x = np.array([[2,3],[5,6]], dtype = np.cdouble)
+	# x0 = np.zeros_like(x,dtype=np.double)
+	# print(x0, type(x0), type(x0[0,0]))
 
 
 def main():
