@@ -24,8 +24,17 @@ def invmatmul():
 	print('solved:', solved)
 
 
+def scratch():
+	# x = np.array([np.inf, np.nan, 3.23 + 3.34j])
+	# print(x)
+	# print(np.isnan(x).any())
+	x = np.array([[2,3],[5,6]], dtype = np.cdouble)
+	x0 = np.zeros_like(x,dtype=np.double)
+	print(x0, type(x0), type(x0[0,0]))
+
+
 def main():
-	invmatmul()
+	scratch()
 
 if __name__ == '__main__':
 	main()

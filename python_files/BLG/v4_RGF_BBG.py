@@ -179,35 +179,35 @@ def test_Ginfkx():
 
 	print(f'Total number of peaks found = {len(new_peakvals)}')
 
-	print('Started quad integrate WITH peaks')
-	start_time = time.perf_counter()
-	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	# print('Started quad integrate WITH peaks')
+	# start_time = time.perf_counter()
+	# call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 
-	start,stop = -np.pi,np.pi
-	ranges = []
-	eta = 0.5*delta
-	# eta = 1e-3
-	current = start
-	for peak in new_peakvals:
-		ranges += [(current, peak-eta)]
-		current = peak+eta
-	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
-	for word in list(zip(ranges,intlist)):
-		print(word)
-	intval = np.sum(intlist)
+	# start,stop = -np.pi,np.pi
+	# ranges = []
+	# eta = 0.5*delta
+	# # eta = 1e-3
+	# current = start
+	# for peak in new_peakvals:
+	# 	ranges += [(current, peak-eta)]
+	# 	current = peak+eta
+	# ranges += [(current, stop)]		
+	# intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
+	# for word in list(zip(ranges,intlist)):
+	# 	print(word)
+	# intval = np.sum(intlist)
 
-	# intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
-	elapsed = time.perf_counter() - start_time
-	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {intval:.5}')
+	# # intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {intval:.5}')
 
-	print('STARTED SIMPSON INTEGRATION')
-	start_time = time.perf_counter()
-	simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
-	elapsed = time.perf_counter() - start_time
-	print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {simpson_intval:.8}')
+	# print('STARTED SIMPSON INTEGRATION')
+	# start_time = time.perf_counter()
+	# simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {simpson_intval:.8}')
 
 
 
