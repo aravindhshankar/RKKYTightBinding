@@ -3,9 +3,9 @@ from scipy.linalg import inv as scipy_inv
 
 #Use the Ainv@y = nplinalg.solve(A,y)
 
-# custinv = np.linalg.inv
+custinv = np.linalg.inv
 # custinv = scipy_inv
-custinv = lambda A: np.linalg.solve(A.T.dot(A), A.T)
+# custinv = lambda A: np.linalg.solve(A.T.dot(A), A.T)
 
 def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	'''
@@ -26,11 +26,13 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	if np.isnan(tnf).any() or np.isinf(tnf).any():
 		flag = False
 		print(f"FOUND overflow in tnf FIRST")
+		print(tnf)
 		return np.zeros_like(G0inv), flag
 	tnb = np.linalg.solve(G0inv,Ty)
 	if np.isnan(tnb).any() or np.isinf(tnb).any():
 		flag = False
 		print(f"FOUND overflow in tnb FIRST")
+		print(tnb)
 		return np.zeros_like(G0inv), flag
 	T = tnf
 	tprod = tnb
@@ -46,11 +48,13 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 		if np.isnan(tnf).any() or np.isinf(tnf).any():
 			flag = False
 			print(f"FOUND overflow in tnf")
+			print(tnf)
 			return np.zeros_like(G0inv), flag
 		tnb = np.linalg.solve(tmpinv,tnb)@tnb
 		if np.isnan(tnb).any() or np.isinf(tnb).any():
 			flag = False
 			print(f"FOUND overflow in tnb")
+			print(tnb)
 			return np.zeros_like(G0inv), flag
 		T = T + tprod@tnf
 		if np.isnan(T).any() or np.isinf(T).any():
@@ -61,6 +65,7 @@ def fastrecGfwd(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 		if np.isnan(tprod).any() or np.isinf(tprod).any():
 			flag = False
 			print(f"FOUND overflow in tprod")
+			print(tprod)
 			return np.zeros_like(G0inv), flag
 	Gn = custinv(G0inv - Ty@T)
 	if np.isnan(Gn).any() or np.isinf(Gn).any():
@@ -119,6 +124,10 @@ def MOMfastrecDOSfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	Tydag = Ty.conj().T
 	Gfwd, fwdflag = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta)
 	Grev, revflag = fastrecGfwd(omega,H0,Tydag,RECURSIONS,delta)
+	print(Gfwd,fwdflag)
+	print(f'maxabsGfwd = {np.max(np.abs(Gfwd))}')
+	print(f'maxabsGrev = {np.max(np.abs(Grev))}')
+	print(Grev,revflag)
 	# Grev = fastrecGrev(omega,kx,**kwargs)
 	# DOS = (-1./np.pi) * np.imag(custinv(custinv(Grev) - Ty@Gfwd@Tydag))
 	if fwdflag and revflag:

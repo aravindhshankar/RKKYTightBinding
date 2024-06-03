@@ -132,13 +132,13 @@ def test_Ginfkx():
 	# omega = 0.000740532
 	# omega = 2e-2
 	omegavals = (omega,)
-	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
-	# kxvals = np.linspace(-0.2,0.2,10000,dtype=np.double)
+	# kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
+	kxvals = np.linspace(-0.2,0.2,1000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
 	# delta = 1e-4 if omega>1e-3 else 1e-6
 	delta = 1e-6
 	# delta = 0.01*omega
-	RECURSIONS = 20
+	RECURSIONS = 30
 	dimH = 8
 	num_pp = 2000
 	start_time = time.perf_counter()
@@ -151,7 +151,7 @@ def test_Ginfkx():
 	print(f'Peaks found on sparse grid : {len(peaks)}')
 	peakvals = [kxvals[peak] for peak in peaks]
 	print("creating fine grid")
-	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=1000,num_pp=num_pp)
 	fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
 
 	print('finding additional peaks')
@@ -225,6 +225,7 @@ def test_Ginfkx():
 	# print(type(fine_integrand[0]))
 	ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
 	plt.show()
+	print(adaptive_kxgrid[fine_integrand<0])
 
 
 def helper_LDOS_mp(omega):
@@ -333,10 +334,22 @@ def test_LDOS_mp():
 	# plt.show()
 
 
+
+def test_Gk_single():
+	# kx =  0.0008039 
+	kx =  0.00073387
+	omega = 2e-3
+	RECURSIONS = 30
+	delta = 1e-6
+	DOSkx = MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	print(DOSkx)
+
+	
 if __name__ == '__main__': 
-	test_Ginfkx()
+	# test_Ginfkx()
 	# dask_LDOS()
 	# test_LDOS_mp()
+	test_Gk_single()
 
 
 
