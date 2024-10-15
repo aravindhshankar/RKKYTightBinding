@@ -31,7 +31,7 @@ def scratch():
 	# x = np.array([[2,3],[5,6]], dtype = np.cdouble)
 	# x0 = np.zeros_like(x,dtype=np.double)
 	# print(x0, type(x0), type(x0[0,0]))
-	A = np.array([-2,3,2,-1])
+	A = Anp.array([-2,3,2,-1])
 	print(A<0)
 
 

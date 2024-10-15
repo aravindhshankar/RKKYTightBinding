@@ -20,6 +20,11 @@ if not os.path.exists(path_to_dump):
 	os.makedirs(path_to_dump)
 	print('Dump directory created at ', path_to_dump)
 
+path_to_figdir = '../Figures/Lifshitz'
+if not os.path.exists(path_to_figdir): 
+	os.makedirs(path_to_figdir)
+	print('figdir directory created at ', path_to_figdir)
+
 epsB = 0.
 epsA = 0.
 t = 1. 
@@ -103,12 +108,13 @@ def test_Ginfomega():
 	plt.show()
 
 def test_Ginfkx():
-	# omega = 1.1
-	omega = 0.15
-	omegavals = (omega,)
+	omega = 1.15
+	# omega = 0.15
+	# omegavals = (omega,)
+	omegavals = (0.2,0.8,1.2,1.8)
 	kxvals = np.linspace(-np.pi,np.pi,1000)
-	delta = 1e-6
-	RECURSIONS = 20
+	delta = 1e-5
+	RECURSIONS = 25
 	dimH = 4
 	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(),RECURSIONS,delta)
 					for omega in omegavals for kx in kxvals]).reshape((len(omegavals),len(kxvals),dimH,dimH))
@@ -116,12 +122,20 @@ def test_Ginfkx():
 	peakvals = [kxvals[peak] for peak in peaks]
 
 	fig, ax = plt.subplots(1)
-	ax.plot(kxvals, kDOS[0,:,0,0])
+	for i, omegaval in enumerate(omegavals):
+		ax.plot(kxvals, kDOS[i,:,0,0], label = f'$\\omega$ = {omegaval:.2f}')
+	ax.plot(kxvals, 0.0*kDOS[0,:,0,0], "k--") #just to show x axis
 	ax.set_xlabel(r'$k_x$')
-	ax.set_title(f'$\\omega$ = {omega:.3}, \\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
+	# ax.set_title(f'$\\omega$ = {omega:.3}, \\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
+	ax.set_title(f'\\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
+	fig.suptitle('Monolayer Graphene')
+	ax.legend()
 	# ax.vlines(kxvals[peaks], ls = '--', c = 'grey')
-	for peak in peaks:
-		ax.axvline(kxvals[peak],ls='--',c='gray')
+	# for peak in peaks:
+		# ax.axvline(kxvals[peak],ls='--',c='gray')
+	# fig.savefig(os.path.join(path_to_figdir, 'BelowLifshitzGraphene.pdf'))
+	# fig.savefig(os.path.join(path_to_figdir, 'AboveLifshitzGraphene.pdf'))
+	fig.savefig(os.path.join(path_to_figdir, 'ShowLifshitz.pdf'))
 	# ax.legend()
 
 	# print('Started quad integrate without peaks')
@@ -142,36 +156,36 @@ def test_Ginfkx():
 	# print(f'intval = {intval:.5}')
 
 
-	for num_pp in [1000,]: #checking convergence
-		print('Started simpson integrate WITH peaks')
-		peak_spacing = 0.005
-		num_uniform = 500
-		print(f'num_pp = {num_pp}, peak_spacing = {2.*peak_spacing/num_pp:.5}, lin_spacing = {2.*np.pi/num_uniform:.5}')
-		start_time = time.perf_counter()
-		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,num_uniform=num_uniform,num_pp=num_pp)
-		fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid])
-		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
-		elapsed = time.perf_counter() - start_time
-		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-		print(f'intval = {simpson_intval:.8}')
-		ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
-		coeff = np.max(fine_integrand) / np.max(delta/np.abs(adaptive_kxgrid))
-		ax.plot(adaptive_kxgrid,coeff*delta/np.abs(adaptive_kxgrid),ls = '--')
-
-	new_peak_idx = find_peaks(fine_integrand,prominence=0.01*np.max(fine_integrand))[0][1]
-	new_peak_val = adaptive_kxgrid[new_peak_idx]
-	ax.axvline(new_peak_val,ls='--')
-	print(f'New peak idx = {new_peak_idx}')
-	fig,ax = plt.subplots(1)
-	fitslice = slice(new_peak_idx-10,new_peak_idx-2)
+	# for num_pp in [1000,]: #checking convergence
+		# print('Started simpson integrate WITH peaks')
+		# peak_spacing = 0.005
+		# num_uniform = 500
+		# print(f'num_pp = {num_pp}, peak_spacing = {2.*peak_spacing/num_pp:.5}, lin_spacing = {2.*np.pi/num_uniform:.5}')
+		# start_time = time.perf_counter()
+		# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=peak_spacing,num_uniform=num_uniform,num_pp=num_pp)
+		# fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid])
+		# simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
+		# elapsed = time.perf_counter() - start_time
+		# print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+		# print(f'intval = {simpson_intval:.8}')
+		# ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
+		# coeff = np.max(fine_integrand) / np.max(delta/np.abs(adaptive_kxgrid))
+		# ax.plot(adaptive_kxgrid,coeff*delta/np.abs(adaptive_kxgrid),ls = '--')
+	# 
+	# new_peak_idx = find_peaks(fine_integrand,prominence=0.01*np.max(fine_integrand))[0][1]
+	# new_peak_val = adaptive_kxgrid[new_peak_idx]
+	# ax.axvline(new_peak_val,ls='--')
+	# print(f'New peak idx = {new_peak_idx}')
+	# fig,ax = plt.subplots(1)
+	# fitslice = slice(new_peak_idx-10,new_peak_idx-2)
 	# fitslice = slice(new_peak_idx+3,new_peak_idx+55)
-	ax.loglog(new_peak_val - adaptive_kxgrid, fine_integrand,'.-')
-	m,c = np.polyfit(np.log(new_peak_val - adaptive_kxgrid[fitslice]),np.log(fine_integrand[fitslice]),1)
+	# ax.loglog(new_peak_val - adaptive_kxgrid, fine_integrand,'.-')
+	# m,c = np.polyfit(np.log(new_peak_val - adaptive_kxgrid[fitslice]),np.log(fine_integrand[fitslice]),1)
 	# m,c = np.polyfit(np.log(adaptive_kxgrid[new_peak_idx+1:new_peak_idx+20]),np.log(fine_integrand[new_peak_idx+1:new_peak_idx+20]),1)
-	ax.loglog(new_peak_val - adaptive_kxgrid[fitslice], np.exp(c)*adaptive_kxgrid[fitslice]**m, label=f'Fit with slope {m:.4}')
-	ax.legend()
-	ax.set_xlabel(r'$k_x$')
-	ax.set_title(f'$\\omega$ = {omega:.3}, \\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
+	# ax.loglog(new_peak_val - adaptive_kxgrid[fitslice], np.exp(c)*adaptive_kxgrid[fitslice]**m, label=f'Fit with slope {m:.4}')
+	# ax.legend()
+	# ax.set_xlabel(r'$k_x$')
+	# ax.set_title(f'$\\omega$ = {omega:.3}, \\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
 	plt.show()
 
 
