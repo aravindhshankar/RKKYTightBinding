@@ -136,9 +136,9 @@ def test_Ginfkx():
 	kxvals = np.linspace(-0.2,0.2,1000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
 	# delta = 1e-4 if omega>1e-3 else 1e-6
-	delta = 1e-6
+	delta = 1e-5
 	# delta = 0.01*omega
-	RECURSIONS = 30
+	RECURSIONS = 25
 	dimH = 8
 	num_pp = 2000
 	start_time = time.perf_counter()
@@ -346,10 +346,10 @@ def test_Gk_single():
 
 	
 if __name__ == '__main__': 
-	# test_Ginfkx()
+	test_Ginfkx()
 	# dask_LDOS()
 	# test_LDOS_mp()
-	test_Gk_single()
+	# test_Gk_single()
 
 
 
