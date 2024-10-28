@@ -136,9 +136,10 @@ def test_Ginfkx():
 	kxvals = np.linspace(-0.05,0.05,10000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
 	# delta = 1e-4 if omega>1e-3 else 1e-6
-	delta = 1e-7
+	# delta = 1e-7
+	delta = 5e-3 * omega
 	# delta = 0.01*omega
-	RECURSIONS = 20
+	RECURSIONS = 30
 	dimH = 8
 	print("Started calculation kDOS")
 	start_time = time.perf_counter()
@@ -167,44 +168,44 @@ def test_Ginfkx():
 	# print(f'intval = {intval:.5}')
 
 
-	print('Started quad integrate WITH peaks')
-	start_time = time.perf_counter()
-	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
-
-	# start,stop = -np.pi,np.pi
+	# print('Started quad integrate WITH peaks')
+	# start_time = time.perf_counter()
+	# call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+# 
+	# # start,stop = -np.pi,np.pi
 	start,stop = kxvals[0],kxvals[-1]
-	ranges = []
-	peakvals = sorted(peakvals)
-	# eta = 0.5*delta
-	eta = 1.*delta
-	current = start
-	for peak in peakvals:
-		ranges += [(current, peak-eta)]
-		current = peak+eta
-	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=200,epsabs=delta)[0] for window in ranges]
-	print(ranges,intlist)
-	intval = np.sum(intlist)
-
-	# intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
-	elapsed = time.perf_counter() - start_time
-	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {intval:.5}')
-
-	for num_pp in [2000]: #checking convergence
-		print('Started simpson integrate WITH peaks')
-		peak_spacing = 0.01
-		print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
-		start_time = time.perf_counter()
-		# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
-		adaptive_kxgrid = generate_grid_with_peaks(start,stop,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
-		fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
-		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
-		elapsed = time.perf_counter() - start_time
-		print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-		print(f'intval = {simpson_intval:.8}')
-		ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
-	# print(type(fine_integrand[0]))
+	# ranges = []
+	# peakvals = sorted(peakvals)
+	# # eta = 0.5*delta
+	# eta = 1.*delta
+	# current = start
+	# for peak in peakvals:
+		# ranges += [(current, peak-eta)]
+		# current = peak+eta
+	# ranges += [(current, stop)]		
+	# intlist = [quad(call_int,window[0],window[1],limit=200,epsabs=delta)[0] for window in ranges]
+	# print(ranges,intlist)
+	# intval = np.sum(intlist)
+# 
+	# # intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
+	# elapsed = time.perf_counter() - start_time
+	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	# print(f'intval = {intval:.5}')
+# 
+	# for num_pp in [2000]: #checking convergence
+		# print('Started simpson integrate WITH peaks')
+		# peak_spacing = 0.01
+		# print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
+		# start_time = time.perf_counter()
+		# # adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+		# adaptive_kxgrid = generate_grid_with_peaks(start,stop,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+		# fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
+		# simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
+		# elapsed = time.perf_counter() - start_time
+		# print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+		# print(f'intval = {simpson_intval:.8}')
+		# ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
+	# # print(type(fine_integrand[0]))
 	plt.show()
 
 
