@@ -7,6 +7,7 @@
 *.npy
 *.npz
 *.out
+*.mp4
 /python_files/BLG/bin/*
 /python_files/BLG/lib/*
 /python_files/BLG/include/*
