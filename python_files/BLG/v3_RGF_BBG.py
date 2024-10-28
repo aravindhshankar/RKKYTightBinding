@@ -127,15 +127,16 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	# omega = 2e-3 
-	omega = 0.000444967
-	# omega = 2e-2
+	omega = 2e-4 
+	# omega = 0.000444967
+	# omega = 2e-1
+	# omega = 2.
 	omegavals = (omega,)
-	kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
-	# kxvals = np.linspace(-0.2,0.2,10000,dtype=np.double)
+	# kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
+	kxvals = np.linspace(-0.05,0.05,10000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
-	delta = 1e-4 if omega>1e-3 else 1e-6
-	# delta = 1e-4
+	# delta = 1e-4 if omega>1e-3 else 1e-6
+	delta = 1e-7
 	# delta = 0.01*omega
 	RECURSIONS = 20
 	dimH = 8
@@ -170,7 +171,8 @@ def test_Ginfkx():
 	start_time = time.perf_counter()
 	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 
-	start,stop = -np.pi,np.pi
+	# start,stop = -np.pi,np.pi
+	start,stop = kxvals[0],kxvals[-1]
 	ranges = []
 	peakvals = sorted(peakvals)
 	# eta = 0.5*delta
@@ -189,12 +191,13 @@ def test_Ginfkx():
 	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	print(f'intval = {intval:.5}')
 
-	for num_pp in [200]: #checking convergence
+	for num_pp in [2000]: #checking convergence
 		print('Started simpson integrate WITH peaks')
 		peak_spacing = 0.01
 		print(f'num_pp = {num_pp}, peak_spacing = {peak_spacing:.4}')
 		start_time = time.perf_counter()
-		adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+		# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
+		adaptive_kxgrid = generate_grid_with_peaks(start,stop,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
 		fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
 		simpson_intval = simpson(fine_integrand,adaptive_kxgrid)
 		elapsed = time.perf_counter() - start_time
