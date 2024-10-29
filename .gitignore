@@ -8,8 +8,5 @@
 *.npz
 *.out
 *.mp4
-/python_files/BLG/bin/*
-/python_files/BLG/lib/*
-/python_files/BLG/include/*
-/python_files/BLG/share/*
+/python_files/BLG/.BLGvenv
 /Cuba-4.2.2/*

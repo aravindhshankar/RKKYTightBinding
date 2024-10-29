@@ -4,7 +4,6 @@ sys.path.insert(0,'..')
 import numpy as np
 # from scipy.linalg import eigvals, eigvalsh
 import matplotlib.pyplot as plt
-from matplotlib import animation
 from scipy.signal import find_peaks
 # from scipy.linalg import norm
 from scipy.integrate import simpson, quad
@@ -12,23 +11,17 @@ from functools import partial
 import time 
 import multiprocessing as mp
 # from FastRGF import MOMfastrecDOSfull
-from FastRGF.RGF import MOMfastrecDOSfull
+from FastRGF.solveRGF import MOMfastrecDOSfull
 from h5_handler import *
 # import concurrent.futures
 from dask.distributed import Client
-import glob
-import re
- 
+
 savename = 'default_savename'
 path_to_output = '../Outputs/BLG/'
-# path_to_dump = '../Dump/BLG/Gkxomega/'
 path_to_dump = '../Dump/BLG/GkxomegaSolveRGF/'
-
 if not os.path.exists(path_to_dump): 
-	print("path to dump directory not found - create data first!")
-	exit(1)
-	# os.makedirs(path_to_dump)
-	# print('Dump directory created at ', path_to_dump)
+	os.makedirs(path_to_dump)
+	print('Dump directory created at ', path_to_dump)
 
 if not os.path.exists(path_to_output):
     os.makedirs(path_to_output)
@@ -215,16 +208,117 @@ def test_Ginfkx():
 	plt.show()
 
 
+def helper_LDOS_mp(omega):
+	RECURSIONS = 20
+	delta = 1e-4 if omega>1e-3 else 1e-6
+	# callintegrand = lambda kx: MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	start_time = time.perf_counter()
+	print(f'omega = {omega:.6} entered',flush=True)
+	kxgrid = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
+	# sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
+	# 				for kx in kxvals],dtype=np.longdouble).reshape((len(kxvals),dimH,dimH))
+	sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+					for kx in kxgrid],dtype=np.longdouble)
+
+	peaks = find_peaks(sparseLDOS,prominence=0.1*np.max(sparseLDOS))[0]
+	peakvals = [kxgrid[peak] for peak in peaks] #peakvals
+	# adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,breakpoints,peak_spacing=0.01,num_uniform=10000,num_pp=200)
+	# fine_integrand = [MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,)[0,0] for kx in adaptive_kxgrid]
+	# LDOS = simpson(fine_integrand,adaptive_kxgrid)
+	# LDOS = simpson(sparseLDOS,kxgrid)
+	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	start,stop = -np.pi,np.pi
+	ranges = []
+	peakvals = sorted(peakvals)
+	# eta = 0.5*delta
+	eta = 1.*delta
+	current = start
+	for peak in peakvals:
+		ranges += [(current, peak-eta)]
+		current = peak+eta
+	ranges += [(current, stop)]		
+	intlist = [quad(call_int,window[0],window[1],limit=200,epsabs=0.1*delta)[0] for window in ranges]
+	LDOS = np.sum(intlist)
+	elapsed = time.perf_counter() - start_time
+	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
+	return LDOS
+
+def dask_LDOS():
+	RECURSIONS = 20
+	delta = 1e-4
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(3200))
+
+	# PROCESSES = mp.cpu_count()
+	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	# PROCESSES = int(32)
+	PROCESSES = 32
+
+	print(f'PROCESSES = {PROCESSES}')
+	client = Client(threads_per_worker=1, n_workers=PROCESSES)
+
+	startmp = time.perf_counter()
+	LDOS = client.gather(client.map(helper_LDOS_mp,omegavals))
+	stopmp = time.perf_counter()
+
+	elapsedmp = stopmp-startmp
+	print(f'DASK parrallelization with {PROCESSES} processes finished in time {elapsedmp} seconds')
+	
+	savedict = {'omegavals' : omegavals,
+				'LDOS' : LDOS,
+				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
+				}
+	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
+	savefileoutput = savename + '.h5'
+	dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
+
+def test_LDOS_mp():
+	'''
+	Use scipy.quad for this
+	'''
+	RECURSIONS = 25
+	delta = 1e-4
+	omegavals = np.logspace(np.log10(1e-6), np.log10(1e0), num = int(8))
+
+	# PROCESSES = mp.cpu_count()
+	PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
+	print(f'PROCESSES = {PROCESSES}')
+	startmp = time.perf_counter()
+	with mp.Pool(PROCESSES) as pool:
+			LDOS = pool.map(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS), omegavals)
+			# r = pool.map_async(partial(helper_LDOS_mp,delta=delta,RECURSIONS=RECURSIONS,analyze=True,method='adaptive'), omegavals)
+			# LDOS = r.get()
+	stopmp = time.perf_counter()
+	elapsedmp = stopmp-startmp
+	print(f'Parallel computation with {PROCESSES} processes finished in time {elapsedmp} seconds')
+	
+	savedict = {'omegavals' : omegavals,
+				'LDOS' : LDOS,
+				'INFO' : '[0,0] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
+				}
+	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
+	savefileoutput = savename + '.h5'
+	# dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
+
+	# fig,ax = plt.subplots(1)
+	# ax.plot(omegavals, LDOS, '.-', label = 'quad LDOS')
+	# # ax.axvline(1., ls='--', c='grey')
+	# ax.set_xlabel('omega')
+	# ax.set_title(f'Bilayer Graphene LDOS A site with $\\delta = $ {delta:.6}')
+	# plt.show()
+
+
 def ret_ldoskxomega(omega,kxvals=None,siteidx=0,delta=1e-7,RECURSIONS=20,verbose=True):
 	if not kxvals:
 		kxvals = np.linspace(-0.05,0.05,10000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
 	# delta = 1e-4 if omega>1e-3 else 1e-6
-	delta = 1e-7
+	# delta = 1e-7
 	# delta = 0.01*omega
-	RECURSIONS = 20
+	delta = 5e-3 * omega
+	RECURSIONS = 30
 	dimH = 8
-	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[siteidx,siteidx] for kx in kxvals],dtype=np.longdouble)
+	docheck = False
+	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,dochecks=False)[siteidx,siteidx] for kx in kxvals],dtype=np.longdouble)
 	savename = f'BLG_Gkx_omega_{omega:.4f}'
 	savedict = {'omega' : omega,
 		'Gkx' : kDOS,
@@ -236,40 +330,10 @@ def ret_ldoskxomega(omega,kxvals=None,siteidx=0,delta=1e-7,RECURSIONS=20,verbose
 	dict2h5(savedict,os.path.join(path_to_dump,savefileoutput), verbose=verbose)
 
 
-def peakevolmain():
-	ofiles = [f for f in glob.glob(os.path.join(path_to_dump,"*.h5"))]
-	def sort_alnum(l):
-		convert = lambda text: float(text) if text.isdigit() else text
-		alphanum = lambda key: [convert(c) for c in re.split('([-+]?[0-9]*\.?[0-9]*)', key)]
-		l.sort(key=alphanum)
-		return l
-	ofiles = sort_alnum(ofiles)
-	print(ofiles[0])
-	# loaded_dict = h52dict(ofiles[0], verbose=True)
-	# print(loaded_dict.keys())
-
-	ims = []
-	fig = plt.figure()
-	ax = fig.add_subplot(111)  # fig and axes created once
-	ax.set_xlabel(r'$k_x$')
-	ax.set_ylabel(r'Gkx')
-	ax.set_ylim(-0.1,1)
-	# for f in glob.glob(os.path.join(path_to_dump,"*.h5")):
-	for f in ofiles:
-		loaded_dict = h52dict(f, verbose=True)
-		omval = loaded_dict['omega']
-		ax.set_title(f'omega = {omval:.4f}')
-		ps = ax.plot(loaded_dict['kxvals'], loaded_dict['Gkx'])
-		ims.append(ps)      # append the new list of plots
-	ani = animation.ArtistAnimation(fig, ims, repeat=False)
-	# ani.save('GkxBLGevolution.mp4', metadata={'title':'evolution of peaks in BLG for Gkx'})
-	ani.save('GkxBLGevolutionSolve.mp4', metadata={'title':'evolution of peaks in BLG for Gkx'})
-
 if __name__ == '__main__': 
 	# test_Ginfkx()
-	# for omega in np.arange(0.0002,0.02,0.0001):
-		# ret_ldoskxomega(omega)
-	peakevolmain()
+	for omega in np.arange(0.0002,0.02,0.0001):
+		ret_ldoskxomega(omega)
 	# dask_LDOS()
 	# test_LDOS_mp()
 
