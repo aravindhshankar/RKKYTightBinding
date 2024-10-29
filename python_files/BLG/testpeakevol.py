@@ -328,10 +328,12 @@ def ret_ldoskxomega(omega,kxvals=None,siteidx=0,delta=1e-7,RECURSIONS=20,verbose
 	savefileoutput = savename + '.h5'
 	dict2h5(savedict,os.path.join(path_to_dump,savefileoutput), verbose=verbose)
 
+def DASK_ldoxkxomega():
+	client
 
 if __name__ == '__main__': 
 	# test_Ginfkx()
-	for omega in np.arange(0.0002,0.02,0.0001):
+	for omega in np.arange(0.0002,0.01,0.00001):
 		ret_ldoskxomega(omega)
 	# dask_LDOS()
 	# test_LDOS_mp()
