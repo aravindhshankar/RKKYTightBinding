@@ -18,7 +18,7 @@ from dask.distributed import Client
 
 savename = 'default_savename'
 path_to_output = '../Outputs/BLG/'
-path_to_dump = '../Dump/BLG/GkxomegaSolveRGF/'
+path_to_dump = '../Dump/BLG/AliceGkxomegaSolveRGF/'
 if not os.path.exists(path_to_dump): 
 	os.makedirs(path_to_dump)
 	print('Dump directory created at ', path_to_dump)
@@ -328,12 +328,27 @@ def ret_ldoskxomega(omega,kxvals=None,siteidx=0,delta=1e-7,RECURSIONS=20,verbose
 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
 	savefileoutput = savename + '.h5'
 	dict2h5(savedict,os.path.join(path_to_dump,savefileoutput), verbose=verbose)
+	return 0
+
+def DASK_ldoxkxomega():
+	PROCESSES = 4
+	client = Client(threads_per_worker = 1, n_workers=PROCESSES)	
+	omegalist = np.arange(0.0002,0.01,0.00001)
+	
+	start = time.perf_counter()
+	client.gather(client.map(ret_ldoskxomega,omegalist))
+	stop = time.perf_counter()
+
+	print('dask map finished in ', stop - start, ' seconds')
+
+
 
 
 if __name__ == '__main__': 
 	# test_Ginfkx()
-	for omega in np.arange(0.0002,0.02,0.0001):
-		ret_ldoskxomega(omega)
+	# for omega in np.arange(0.0002,0.02,0.0001):
+		# ret_ldoskxomega(omega)
+	DASK_ldoxkxomega()
 	# dask_LDOS()
 	# test_LDOS_mp()
 
