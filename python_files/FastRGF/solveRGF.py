@@ -126,7 +126,7 @@ def MOMfastrecDOSfull(omega,H0,Ty,RECURSIONS=20,delta=0.001,dochecks=False):
 	# print(Grev,revflag)
 	# Grev = fastrecGrev(omega,kx,**kwargs)
 	# DOS = (-1./np.pi) * np.imag(custinv(custinv(Grev) - Ty@Gfwd@Tydag))
-	if dochecks == True and (fwdflag and revflag):
+	if (fwdflag and revflag):
 		itrmdt = custinv(Grev) - Ty@Gfwd@Tydag
 		if dochecks == True and (np.isnan(itrmdt).any() or np.isinf(itrmdt).any()):
 			warnings.warn(f"FOUND overflow in itrmdt for omega = {omega}")

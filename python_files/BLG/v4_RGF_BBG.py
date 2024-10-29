@@ -133,41 +133,43 @@ def test_Ginfkx():
 	# omega = 2e-2
 	omegavals = (omega,)
 	# kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
-	kxvals = np.linspace(-0.1,0.1,10000,dtype=np.double)
+	kxvals = np.linspace(-0.05,0.05,5000,dtype=np.double)
 	# delta = min(1e-4,0.01*omega)
 	# delta = 1e-4 if omega>1e-3 else 1e-6
 	# delta = 1e-5
-	delta = 1e-7
+	dochecks = False
+	delta = 5e-3 * omega
 	# delta = 0.01*omega
 	RECURSIONS = 30
 	dimH = 8
 	num_pp = 2000
+	start, stop = kxvals[0], kxvals[-1]
 	start_time = time.perf_counter()
-	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
+	kDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,dochecks)
 					for omega in omegavals for kx in kxvals],dtype=np.longdouble).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	elapsed = time.perf_counter() - start_time
 	print(f'Finished calculating kDOS in {elapsed} sec(s).')
 	# peaks = find_peaks(kDOS[0,:,0,0],prominence=0.01*np.max(kDOS[0,:,0,0]))[0]
-	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1)[0]
+	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
 	print(f'Peaks found on sparse grid : {len(peaks)}')
 	peakvals = [kxvals[peak] for peak in peaks]
 	print("creating fine grid")
-	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=1000,num_pp=num_pp)
-	fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
-
-	print('finding additional peaks')
-	# new_peaks = find_peaks(fine_integrand,prominence=0.01*np.max(fine_integrand))[0]
-	new_peaks = find_peaks(fine_integrand,prominence=0.1)[0]
-	new_peakvals = [adaptive_kxgrid[peak] for peak in new_peaks]
-	new_peakvals = sorted(new_peakvals)
+	# adaptive_kxgrid = generate_grid_with_peaks(start,stop,peakvals,peak_spacing=0.01,num_uniform=1000,num_pp=num_pp)
+	# fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
+	# 
+	# print('finding additional peaks')
+	# # new_peaks = find_peaks(fine_integrand,prominence=0.01*np.max(fine_integrand))[0]
+	# new_peaks = find_peaks(fine_integrand,prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
+	# new_peakvals = [adaptive_kxgrid[peak] for peak in new_peaks]
+	# new_peakvals = sorted(new_peakvals)
 
 	fig, ax = plt.subplots(1)
 	ax.plot(kxvals, kDOS[0,:,0,0])
 	ax.set_xlabel(r'$k_x$')
 	ax.set_title(f'$\\omega$ = {omega:.3}, \\delta = {delta:.6}, RECURSIONS = {RECURSIONS}')
 	# ax.vlines(kxvals[peaks], ls = '--', c = 'grey')
-	for peak in new_peakvals:
-		ax.axvline(peak,ls='--',c='gray')
+	# for peak in new_peakvals:
+		# ax.axvline(peak,ls='--',c='gray')
 
 	# ax.legend()
 	# print('Started quad integrate without peaks')
@@ -178,7 +180,7 @@ def test_Ginfkx():
 	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	# print(f'intval = {intval:.5}')
 
-	print(f'Total number of peaks found = {len(new_peakvals)}')
+	# print(f'Total number of peaks found = {len(new_peakvals)}')
 
 	# print('Started quad integrate WITH peaks')
 	# start_time = time.perf_counter()
@@ -224,9 +226,9 @@ def test_Ginfkx():
 	# 	print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	# 	print(f'intval = {simpson_intval:.8}')
 	# print(type(fine_integrand[0]))
-	ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
+	# ax.plot(adaptive_kxgrid,fine_integrand,'.',c='red')
 	plt.show()
-	print(adaptive_kxgrid[fine_integrand<0])
+	# print(adaptive_kxgrid[fine_integrand<0])
 
 
 def helper_LDOS_mp(omega):
