@@ -59,7 +59,7 @@ def h52dict(file_path, verbose = False):
 	            loaded_dict[key] = value[()]
 
 	if verbose:
-		print('Dictionary loaded from HDF5 file:')
+		print('Dictionary loaded from HDF5 file:', file_path)
 
 	return (loaded_dict)
 
