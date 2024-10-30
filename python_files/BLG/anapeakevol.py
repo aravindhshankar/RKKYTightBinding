@@ -22,7 +22,8 @@ import re
 savename = 'default_savename'
 path_to_output = '../Outputs/BLG/'
 # path_to_dump = '../Dump/BLG/Gkxomega/'
-path_to_dump = '../Dump/BLG/GkxomegaSolveRGF/'
+# path_to_dump = '../Dump/BLG/GkxomegaSolveRGF/'
+path_to_dump = '../Dump/BLG/AliceGkxomegaSolveRGF/'
 
 if not os.path.exists(path_to_dump): 
 	print("path to dump directory not found - create data first!")
@@ -259,7 +260,7 @@ def peakevolmain():
 	for f in ofiles:
 		loaded_dict = h52dict(f, verbose=True)
 		omval = loaded_dict['omega']
-		ttl = plt.text(0.5, 1.01, f'omega = {omval:.4f}', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
+		ttl = plt.text(0.5, 1.01, f'omega = {omval:.5f}', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
 		ps = ax.plot(loaded_dict['kxvals'], loaded_dict['Gkx'])
 		ps.append(ttl)
 		ims.append(ps)      # append the new list of plots
