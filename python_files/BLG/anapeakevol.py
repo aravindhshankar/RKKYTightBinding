@@ -254,12 +254,14 @@ def peakevolmain():
 	ax.set_xlabel(r'$k_x$')
 	ax.set_ylabel(r'Gkx')
 	ax.set_ylim(-0.1,1)
+	ax.title.set_animated(True)
 	# for f in glob.glob(os.path.join(path_to_dump,"*.h5")):
 	for f in ofiles:
 		loaded_dict = h52dict(f, verbose=True)
 		omval = loaded_dict['omega']
-		ax.set_title(f'omega = {omval:.4f}')
+		ttl = plt.text(0.5, 1.01, f'omega = {omval:.4f}', horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes)
 		ps = ax.plot(loaded_dict['kxvals'], loaded_dict['Gkx'])
+		ps.append(ttl)
 		ims.append(ps)      # append the new list of plots
 	ani = animation.ArtistAnimation(fig, ims, repeat=False)
 	# ani.save('GkxBLGevolution.mp4', metadata={'title':'evolution of peaks in BLG for Gkx'})

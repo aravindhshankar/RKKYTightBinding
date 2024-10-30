@@ -8,5 +8,5 @@
 *.npz
 *.out
 *.mp4
-/python_files/BLG/.BLGvenv
+/.BLGvenv
 /Cuba-4.2.2/*
