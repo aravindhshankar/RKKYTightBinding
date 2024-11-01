@@ -125,15 +125,18 @@ def ret_Ty(kx):
 
 	return Ty
 
+
+
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 2e-3 
+	omega = 2e-4 
 	# omega = 0.000444967
 	# omega = 0.000740532
 	# omega = 2e-2
 	omegavals = (omega,)
 	# kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
-	kxvals = np.linspace(-0.05,0.05,5000,dtype=np.double)
+	# kxvals = np.linspace(-0.05,0.05,5000,dtype=np.double)
+	kxvals = np.sort(np.concatenate((np.linspace(-0.05,0.05,5000,dtype=np.double), np.linspace(-np.pi,np.pi,500,dtype=np.double))))
 	# delta = min(1e-4,0.01*omega)
 	# delta = 1e-4 if omega>1e-3 else 1e-6
 	# delta = 1e-5
@@ -153,7 +156,7 @@ def test_Ginfkx():
 	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
 	print(f'Peaks found on sparse grid : {len(peaks)}')
 	peakvals = [kxvals[peak] for peak in peaks]
-	print("creating fine grid")
+	# print("creating fine grid")
 	# adaptive_kxgrid = generate_grid_with_peaks(start,stop,peakvals,peak_spacing=0.01,num_uniform=1000,num_pp=num_pp)
 	# fine_integrand = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0] for kx in adaptive_kxgrid],dtype=np.double)
 	# 
@@ -184,26 +187,27 @@ def test_Ginfkx():
 
 	# print('Started quad integrate WITH peaks')
 	# start_time = time.perf_counter()
-	# call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
+	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[0,0]
 
-	# start,stop = -np.pi,np.pi
-	# ranges = []
-	# eta = 0.5*delta
-	# # eta = 1e-3
-	# current = start
+	start,stop = -np.pi,np.pi
+	ranges = []
+	eta = 0.5*delta
+	# eta = 1e-3
+	current = start
 	# for peak in new_peakvals:
-	# 	ranges += [(current, peak-eta)]
-	# 	current = peak+eta
-	# ranges += [(current, stop)]		
-	# intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
-	# for word in list(zip(ranges,intlist)):
-	# 	print(word)
-	# intval = np.sum(intlist)
+	for peak in peakvals:
+		ranges += [(current, peak-eta)]
+		current = peak+eta
+		ranges += [(current, stop)]		
+	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
+	for word in list(zip(ranges,intlist)):
+		print(word)
+	intval = np.sum(intlist)
 
-	# # intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
+	# intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
 	# elapsed = time.perf_counter() - start_time
-	# print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	# print(f'intval = {intval:.5}')
+	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
+	print(f'intval = {intval:.5}')
 
 	# print('STARTED SIMPSON INTEGRATION')
 	# start_time = time.perf_counter()
