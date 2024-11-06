@@ -129,10 +129,11 @@ def ret_Ty(kx):
 
 def test_Ginfkx():
 	# omega = 1 - 1e-2
-	omega = 2e-4 
+	# omega = 2e-4 
 	# omega = 0.000444967
 	# omega = 0.000740532
 	# omega = 2e-2
+	omega = 0.137
 	omegavals = (omega,)
 	# kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# kxvals = np.linspace(-0.05,0.05,5000,dtype=np.double)
@@ -152,8 +153,8 @@ def test_Ginfkx():
 					for omega in omegavals for kx in kxvals],dtype=np.longdouble).reshape((len(omegavals),len(kxvals),dimH,dimH))
 	elapsed = time.perf_counter() - start_time
 	print(f'Finished calculating kDOS in {elapsed} sec(s).')
-	# peaks = find_peaks(kDOS[0,:,0,0],prominence=0.01*np.max(kDOS[0,:,0,0]))[0]
-	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
+	peaks = find_peaks(kDOS[0,:,0,0],prominence=0.01*np.max(kDOS[0,:,0,0]))[0]
+	# peaks = find_peaks(kDOS[0,:,0,0],prominence=0.1*np.max(kDOS[0,:,0,0]))[0]
 	print(f'Peaks found on sparse grid : {len(peaks)}')
 	peakvals = [kxvals[peak] for peak in peaks]
 	# print("creating fine grid")
@@ -191,14 +192,16 @@ def test_Ginfkx():
 
 	start,stop = -np.pi,np.pi
 	ranges = []
-	eta = 0.5*delta
+	# eta = 0.5*delta
+	eta = 1e-5
 	# eta = 1e-3
 	current = start
 	# for peak in new_peakvals:
 	for peak in peakvals:
 		ranges += [(current, peak-eta)]
+		ranges += [(peak-eta, peak+eta)]
 		current = peak+eta
-		ranges += [(current, stop)]		
+	ranges += [(current, stop)]		
 	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
 	for word in list(zip(ranges,intlist)):
 		print(word)
@@ -207,7 +210,7 @@ def test_Ginfkx():
 	# intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
 	# elapsed = time.perf_counter() - start_time
 	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {intval:.5}')
+	print(f'intval = {intval:.6}')
 
 	# print('STARTED SIMPSON INTEGRATION')
 	# start_time = time.perf_counter()
@@ -216,7 +219,10 @@ def test_Ginfkx():
 	# print(f'Finished simpson integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
 	# print(f'intval = {simpson_intval:.8}')
 
-
+	for peak in peakvals:
+		ax.axvline(peak, c='r', ls = '--')
+		ax.axvline(peak-eta, c='gray', ls = '--',alpha=0.7)
+		ax.axvline(peak+eta, c='gray', ls = '--',alpha=0.7)
 
 	# for num_pp in [2000]: #checking convergence
 	# 	print('Started simpson integrate WITH peaks')
