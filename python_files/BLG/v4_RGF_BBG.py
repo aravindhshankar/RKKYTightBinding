@@ -133,7 +133,7 @@ def test_Ginfkx():
 	# omega = 0.000444967
 	# omega = 0.000740532
 	# omega = 2e-2
-	omega = 0.137
+	omega = 3e-4
 	omegavals = (omega,)
 	# kxvals = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
 	# kxvals = np.linspace(-0.05,0.05,5000,dtype=np.double)
@@ -202,15 +202,15 @@ def test_Ginfkx():
 		ranges += [(peak-eta, peak+eta)]
 		current = peak+eta
 	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
-	for word in list(zip(ranges,intlist)):
+	intlist = [quad(call_int,window[0],window[1],limit=5000,epsabs=0.01*delta,full_output=True) for window in ranges]
+	for word in list(zip(ranges,[(ival[0],ival[1],ival[2]['neval'],ival[2]['last']) for ival in intlist])):
 		print(word)
-	intval = np.sum(intlist)
+	intval = np.sum([ilist[0] for ilist in intlist])
 
 	# intval = quad(call_int, -np.pi,np.pi, points = [kxvals[peak] for peak in peaks])[0]
 	# elapsed = time.perf_counter() - start_time
 	print(f'Finished quad integrator with delta = {delta:.6} and {RECURSIONS} recursions in {elapsed} sec(s).')
-	print(f'intval = {intval:.6}')
+	print(f'intval = {intval:.8}')
 
 	# print('STARTED SIMPSON INTEGRATION')
 	# start_time = time.perf_counter()
@@ -221,8 +221,8 @@ def test_Ginfkx():
 
 	for peak in peakvals:
 		ax.axvline(peak, c='r', ls = '--')
-		ax.axvline(peak-eta, c='gray', ls = '--',alpha=0.7)
-		ax.axvline(peak+eta, c='gray', ls = '--',alpha=0.7)
+		ax.axvline(peak-eta, c='gray', ls = '--',alpha=0.5)
+		ax.axvline(peak+eta, c='gray', ls = '--',alpha=0.5)
 
 	# for num_pp in [2000]: #checking convergence
 	# 	print('Started simpson integrate WITH peaks')

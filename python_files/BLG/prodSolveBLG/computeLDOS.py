@@ -157,7 +157,7 @@ def helper_LDOS_mp(omega):
 		ranges += [(peak-eta, peak+eta)]
 		current = peak+eta
 	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
+	intlist = [quad(call_int,window[0],window[1],limit=5000,epsabs=0.01*delta)[0] for window in ranges]
 	intval = np.sum(intlist)
 	if __debug__: 
 		elapsed = time.perf_counter() - start_time
@@ -172,7 +172,8 @@ def dask_LDOS():
 	# omegavals = (2e-2,2e-4)
 	omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-4),np.log10(1e-2),500),np.linspace(1e-2+eps,5e-1,50))))
 	# PROCESSES = mp.cpu_count()
-	PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','2'))
+	# PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','2'))
+	PROCESSES = int(os.environ.get('SLURM_NTASKS','2'))
 
 	print(f'PROCESSES = {PROCESSES}')
 	client = Client(threads_per_worker=1, n_workers=PROCESSES)

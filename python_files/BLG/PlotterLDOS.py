@@ -5,14 +5,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from h5_handler import *
-path_to_dump = '../Outputs/BLG'
+path_to_dump = '../Output/BLG/solveLDOStest/'
 if not os.path.exists(path_to_dump): 
 	raise Exception('Path to dump not found')
 	exit(1)
 
 # filename = 'v3BLG_LDOS_00_2439941.h5'
 # filename = 'v3BLG_LDOS_11_2441853.h5'
-filename = 'v4BLG_LDOS_11_2448372.h5'
+# filename = 'BLGsolveRGF_3393566.h5'
+filename = 'BLGsolveRGF_3400662.h5'
 try:
 	load_dict = h52dict(os.path.join(path_to_dump,filename))
 except FileNotFoundError:
