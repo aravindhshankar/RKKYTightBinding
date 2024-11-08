@@ -109,7 +109,7 @@ def test_Ginfomega():
 	plt.show()
 
 def test_Ginfkx():
-	omega = 0.9
+	omega = 0.5
 	vF = 1.5 # 3ta/2
 	# omega = 0.15
 	# omegavals = (omega,)

@@ -43,20 +43,22 @@ if __name__ == '__main__':
 		return 0
 	def twopeakIntegrand(ndim, xx, ncomp, ff, userdata):
 		x,_ = [xx[i] for i in range(ndim.contents.value)]
+		# x = xx[0]
 		a = 1e-5
 		pref = 1 / (a * np.pi) 
-		result = pref * 1 / ( 1 + ((x-0.1312)**2 / a**2)) + pref * 1 / ( 1 + ((x-0.43217)**2 / a**2))
+		result = pref * 1 / ( 1 + ((x-0.1312)**2 / a**2)) + pref * 1 / ( 1 + ((x-0.73217)**2 / a**2))
  
-		ff[0] = result
+		# ff[0] = result * np.sin(np.pi * y) * 0.5 * np.pi
+		ff[0] = result 
 		return 0
 
 	NDIM = 2
 	NCOMP = 1
 
 	NNEW = 1000
-	NMIN = 2
+	NMIN = 100
 	# FLATNESS = 50.
-	FLATNESS = 0.1
+	FLATNESS = 1e-3
 
 	# KEY1 = 47
 	KEY1 = 47
@@ -78,10 +80,10 @@ if __name__ == '__main__':
 	verbose=0
 
 	print_header('Vegas')
-	print_results('Vegas', pycuba.Vegas(Integrand, NDIM, verbose=verbose, epsrel=1e-8))
+	print_results('Vegas', pycuba.Vegas(Integrand, NDIM, verbose=verbose, epsrel=1e-3))
 
 	print_header('Suave')
-	print_results('Suave', pycuba.Suave(Integrand, NDIM, NNEW, NMIN, FLATNESS, verbose=verbose, epsrel=1e-8))
+	print_results('Suave', pycuba.Suave(Integrand, NDIM, NNEW, NMIN, FLATNESS, verbose=verbose, epsrel=1e-3))
 
 	print_header('Divonne')
 	print_results('Divonne', pycuba.Divonne(Integrand, NDIM, 
