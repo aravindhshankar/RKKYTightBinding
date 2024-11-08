@@ -19,6 +19,8 @@ def print_results(name, results):
 
 LOWERLIM = -np.pi
 UPPERLIM = np.pi
+LOWERLIM = 0
+UPPERLIM = 1
 def shiftdomain(f):
 	'''
 	f(x) is integrated from a to b
@@ -33,18 +35,19 @@ def cubify(f):
 	'''
 	def wrapper(ndim,xx,ncomp,ff,userdata):
 		x,_ = [xx[i] for i in range(ndim.contents.value)]
-		ff[0] = f(x)
+		ff[0] = (UPPERLIM-LOWERLIM) * f(LOWERLIM + (UPPERLIM-LOWERLIM)*x)
 		return 0
 	return wrapper 
 
 
 if __name__ == '__main__':
 	@cubify
-	@shiftdomain
 	def twopeakIntegrand(x):
 		a = 1e-5
 		pref = 1 / (a * np.pi) 
-		result = pref * 1 / ( 1 + ((x-5.1312)**2 / a**2)) + pref * 1 / ( 1 + ((x-0.73217)**2 / a**2))
+		peaklist = np.sort([0.12312, 0.12413, 0.13123, 0.43535, 0.657575,0.12312,0.34535,0.25363,0.536344,0.235235,0.24353,0.78878,0.89898435,0.3423,0.567,0.4333])
+		# result = pref * 1 / ( 1 + ((x-0.1312)**2 / a**2)) + pref * 1 / ( 1 + ((x-0.73217)**2 / a**2))
+		result = np.sum([pref * 1 / ( 1 + ((x-x0)**2 / a**2)) for x0 in peaklist]) 
 		return result
 
 	NDIM = 2
@@ -75,18 +78,18 @@ if __name__ == '__main__':
 	verbose=0
 
 	print_header('Vegas')
-	print_results('Vegas', pycuba.Vegas(Integrand, NDIM, verbose=verbose, epsrel=1e-3))
+	print_results('Vegas', pycuba.Vegas(Integrand, NDIM, verbose=verbose, maxeval=MAXEVAL,  epsrel=1e-3))
 
 	print_header('Suave')
-	print_results('Suave', pycuba.Suave(Integrand, NDIM, NNEW, NMIN, FLATNESS, verbose=verbose, epsrel=1e-3))
+	print_results('Suave', pycuba.Suave(Integrand, NDIM, NNEW, NMIN, FLATNESS, verbose=verbose,maxeval = MAXEVAL,  epsrel=1e-3))
 
-	print_header('Divonne')
-	print_results('Divonne', pycuba.Divonne(Integrand, NDIM, 
-				mineval=MINEVAL, maxeval=MAXEVAL,
-				key1=KEY1, key2=KEY2, key3=KEY3, maxpass=MAXPASS,
-				border=BORDER, maxchisq=MAXCHISQ, mindeviation=MINDEVIATION,
-				ldxgiven=LDXGIVEN, verbose=verbose,epsrel=1e-3))
+	# print_header('Divonne')
+	# print_results('Divonne', pycuba.Divonne(Integrand, NDIM, 
+				# mineval=MINEVAL, maxeval=MAXEVAL,
+				# key1=KEY1, key2=KEY2, key3=KEY3, maxpass=MAXPASS,
+				# border=BORDER, maxchisq=MAXCHISQ, mindeviation=MINDEVIATION,
+				# ldxgiven=LDXGIVEN, verbose=verbose,epsrel=1e-3))
 
 	print_header('Cuhre')
-	print_results('Cuhre', pycuba.Cuhre(Integrand, NDIM, key=KEY, verbose=verbose,epsrel=1e-6 ))
+	print_results('Cuhre', pycuba.Cuhre(Integrand, NDIM, key=KEY, maxeval=MAXEVAL, verbose=verbose,epsrel=1e-6 ))
 
