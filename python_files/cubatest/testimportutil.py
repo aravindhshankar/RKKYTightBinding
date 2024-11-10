@@ -8,7 +8,7 @@ sys.path.insert(1,'..')
 from utils.decorators import cubify
 
 ##### initialize cubify ######
-cub_instance = cubify.set_limits(0.,1.)
+cubify.set_limits(-np.pi,np.pi)
 
 def print_header(name):
 	print('-------------------- %s test -------------------' % name)
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 	def twopeakIntegrand(x):
 		a = 1e-5
 		pref = 1 / (a * np.pi) 
-		peaklist = np.sort([0.12312, 0.12413, 0.13123, 0.43535, 0.657575,0.12312,0.34535,0.25363,0.536344,0.235235,0.24353,0.78878,0.89898435,0.3423,0.567,0.4333])
+		peaklist = np.sort([0.12312, 1.12413, 0.13123, 0.43535, 0.657575,0.12312,0.34535,0.25363,0.536344,0.235235,0.24353,0.78878,0.89898435,0.3423,0.567,0.4333])
 		# result = pref * 1 / ( 1 + ((x-0.1312)**2 / a**2)) + pref * 1 / ( 1 + ((x-0.73217)**2 / a**2))
 		result = np.sum([pref * 1 / ( 1 + ((x-x0)**2 / a**2)) for x0 in peaklist]) 
 		return result
