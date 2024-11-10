@@ -12,7 +12,7 @@ import time
 import multiprocessing as mp
 # from FastRGF import MOMfastrecDOSfull
 from FastRGF.solveRGF import MOMfastrecDOSfull
-from h5_handler import *
+from utils.h5_handler import *
 # import concurrent.futures
 from dask.distributed import Client
 
