@@ -1,19 +1,16 @@
 from functools import wraps
-import pycuba
-import numpy as np
-import math
 
 class cubify:
-	# Class attributes for constants
-	LOWERLIM = 0
-	UPPERLIM = 1
+	# Class attributes for constans indicating range of integration
+	LOWERLIM = 0.
+	UPPERLIM = 1.
 
 	@classmethod
 	def set_limits(cls, a_, b_):
 		cls.LOWERLIM = a_
 		cls.UPPERLIM = b_
 
-	# Decorator that uses the constants
+	# Decorator that returns a function of one variable, scales it appropriately for the cuba integration routines
 	@classmethod
 	def Cubify(cls, f):
 		@wraps(f)
