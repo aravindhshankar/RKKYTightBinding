@@ -2,20 +2,15 @@ import sys
 import os
 sys.path.insert(0,'..')
 import numpy as np
-# from scipy.linalg import eigvals, eigvalsh
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
-# from scipy.linalg import norm
 from scipy.integrate import simpson, quad
 from functools import partial
 import time 
-import multiprocessing as mp
-# from FastRGF import MOMfastrecDOSfull
 from FastRGF.solveRGF import MOMfastrecDOSfull
 from utils.h5_handler import *
 from utils.decorators import cubify
 import pycuba
-# import concurrent.futures
 from dask.distributed import Client
 
 savename = 'default_savename'
@@ -258,57 +253,41 @@ def test_Ginfkx():
 
 
 def helper_LDOS_mp(omega):
-	RECURSIONS = 20
-	delta = 1e-4 if omega>1e-3 else 1e-6
-	num_pp = 1000
-	call_int = lambda kx : MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)[1,1]
-	start_time = time.perf_counter()
-	print(f'omega = {omega:.6} entered',flush=True)
-	kxgrid = np.linspace(-np.pi,np.pi,10000,dtype=np.double)
-	# sparseLDOS = np.array([MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
-	# 				for kx in kxvals],dtype=np.longdouble).reshape((len(kxvals),dimH,dimH))
-	sparseLDOS = np.array([call_int(kx) for kx in kxgrid],dtype=np.double)
-	peaks = find_peaks(sparseLDOS,prominence=0.01)[0]
-	peakvals = [kxgrid[peak] for peak in peaks] #peakvals
-	peakvals = sorted(peakvals)
+	idx_x, idx_y = 0,0
+	dochecks = False
+	delta = 5e-3 * omega
+	RECURSIONS = 30
+	dimH = 8
+	
+	##### initialize cubify ######
+	cubify.set_limits(-np.pi,np.pi)
+	NDIM = 2
+	KEY = 0
+	MAXEVAL = int(1e6)
+	VERBOSE = 0
+	EPSREL = 1e-5
+	
+	@cubify.Cubify
+	def call_int(kx): 
+ 		return MOMfastrecDOSfull(omega,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta,dochecks)[idx_x,idx_y]
 
-	if len(peakvals) > 20:
-		return float('NaN')
+	################### starting integration #################
+	start_time = time.perf_counter() if __debug__ else 0.0
+	CUHREdict = pycuba.Cuhre(call_int, NDIM, key=KEY, maxeval=MAXEVAL, verbose=VERBOSE,epsrel=EPSREL) 
+	# CUHREdict=  {'neval': 19955, 'fail': 0, 'comp': 0, 'nregions': 154, 'results': [{'integral': 0.002789452157117059, 'error': 2.63535369804456e-07, 'prob': 0.0}]}
+	intval = CUHREdict['results'][0]['integral']
+	if __debug__: 
+		elapsed = time.perf_counter() - start_time
+		print(f"Finished integration for omega = {omega:.6f} in {elapsed} sec(s) with fail = {CUHREdict['fail']}, neval = {CUHREdict['neval']}.")
 
-	adaptive_kxgrid = generate_grid_with_peaks(-np.pi,np.pi,peakvals,peak_spacing=0.01,num_uniform=10000,num_pp=num_pp)
-	fine_integrand = np.array([call_int(kx) for kx in adaptive_kxgrid],dtype=np.double)
-	new_peaks = find_peaks(fine_integrand,prominence=0.01)[0]
-	new_peakvals = [adaptive_kxgrid[peak] for peak in new_peaks]
-	new_peakvals = sorted(new_peakvals)
-
-	if len(new_peakvals) > 25:
-		return float('NaN')
-
-	start,stop = -np.pi,np.pi
-	ranges = []
-	# eta = 0.5*delta
-	eta = 0.5*delta
-	current = start
-	for peak in new_peakvals:
-		ranges += [(current, peak-eta)]
-		current = peak+eta
-	ranges += [(current, stop)]		
-	intlist = [quad(call_int,window[0],window[1],limit=500,epsabs=0.1*delta)[0] for window in ranges]
-	LDOS = np.sum(intlist)
-	elapsed = time.perf_counter() - start_time
-	print(f'omega = {omega:.6} finished in {elapsed} seconds.',flush=True)
-	return LDOS
+	return intval
 
 def dask_LDOS():
-	RECURSIONS = 20
-	delta = 1e-4
-	omegavals = np.logspace(np.log10(1e-5), np.log10(1e-1), num = int(2040))
+	# omegavals = np.logspace(np.log10(1e-5), np.log10(1e-1), num = int(2040))
+	# omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-4),np.log10(1e-2),500),np.linspace(1e-2+eps,5e-1,50))))
+	omegavals = [0.0003,0.003,0.03,0.3]
 
-	# PROCESSES = mp.cpu_count()
-	# PROCESSES = int(os.environ['SLURM_CPUS_PER_TASK'])
-	# PROCESSES = int(32)
-	PROCESSES = 24
-
+	PROCESSES = int(os.environ.get('SLURM_NTASKS','2'))
 	print(f'PROCESSES = {PROCESSES}')
 	client = Client(threads_per_worker=1, n_workers=PROCESSES)
 
@@ -321,7 +300,7 @@ def dask_LDOS():
 	
 	savedict = {'omegavals' : omegavals,
 				'LDOS' : LDOS,
-				'INFO' : '[1,1] site of -1/pi Im G, delta = 1e-4 if omega>1e-3 else 1e-6, RECURSIONS = 25'
+				'INFO' : '[0,0] site of -1/pi Im G, delta = 5e-3 * omega'
 				}
 	# dict2h5(savedict,'BLGAsiteLDOS.h5', verbose=True)
 	savefileoutput = savename + '.h5'
@@ -375,8 +354,8 @@ def test_Gk_single():
 
 	
 if __name__ == '__main__': 
-	test_Ginfkx()
-	# dask_LDOS()
+	# test_Ginfkx()
+	dask_LDOS()
 	# test_LDOS_mp()
 	# test_Gk_single()
 

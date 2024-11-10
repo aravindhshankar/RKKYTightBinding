@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=BLGsolveRGF
+#SBATCH --job-name=CUHREBLGsolveRGF
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
@@ -22,6 +22,6 @@ echo "[$SHELL] Current working directory: $CWD"
 export file_name="${SLURM_JOB_NAME}_${SLURM_JOB_ID}"
 echo "[$SHELL] Running Python script"
 #
-python computeLDOS.py "$file_name"
+python CUHREcomputeLDOS.py "$file_name"
 #
 echo "[$SHELL]#### SLURM script finished. "
