@@ -104,11 +104,10 @@ def fastrecGrev(omega,H0,Ty,RECURSIONS=20,delta=0.001):
 	return G
 
 
-def MOMfastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001):
+def MOMfastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001,dochecks=False):
 	Tydag = Ty.conj().T
-	Gfwd = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta)
-	Grev = fastrecGfwd(omega,H0,Tydag,RECURSIONS,delta)
-	# Grev = fastrecGrev(omega,kx,**kwargs)
+	Gfwd, fwdflag = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta,dochecks=dochecks)
+	Grev, revflag = fastrecGfwd(omega,H0,Tydag,RECURSIONS,delta,dochecks=dochecks)
 	G = custinv(custinv(Grev) - Ty@Gfwd@Tydag)
 	return G
 
