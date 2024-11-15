@@ -108,7 +108,17 @@ def MOMfastrecGfull(omega,H0,Ty,RECURSIONS=20,delta=0.001,dochecks=False):
 	Tydag = Ty.conj().T
 	Gfwd, fwdflag = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta,dochecks=dochecks)
 	Grev, revflag = fastrecGfwd(omega,H0,Tydag,RECURSIONS,delta,dochecks=dochecks)
-	G = custinv(custinv(Grev) - Ty@Gfwd@Tydag)
+	if (fwdflag and revflag):
+		itrmdt = custinv(Grev) - Ty@Gfwd@Tydag
+		if dochecks == True and (np.isnan(itrmdt).any() or np.isinf(itrmdt).any()):
+			warnings.warn(f"FOUND overflow in itrmdt for omega = {omega}")
+			return np.zeros_like(H0,dtype=np.double)
+		G = custinv(itrmdt) #notice the relative 1/np.pi in the ldos definition
+		if dochecks == True and (np.isnan(G).any() or np.isinf(G).any()):
+			warnings.warn(f"FOUND overflow in G for omega = {omega}")
+			return np.zeros_like(H0,dtype=np.double)
+	else: 
+		G = np.zeros_like(H0,dtype=np.double)
 	return G
 
 
@@ -140,6 +150,27 @@ def MOMfastrecDOSfull(omega,H0,Ty,RECURSIONS=20,delta=0.001,dochecks=False):
 	return DOS
 
 
+def MOMfastrecNLDOSfull(omega,r,kx,H0,Ty,RECURSIONS=20,delta=0.001,dochecks=False):
+	'''
+	Returns NLDOS of omega, r, kx
+	Needs to be integrated in kx from -pi to pi
+	'''
+	Tydag = Ty.conj().T
+	Gfwd, fwdflag = fastrecGfwd(omega,H0,Ty,RECURSIONS,delta,dochecks=dochecks)
+	Grev, revflag = fastrecGfwd(omega,H0,Tydag,RECURSIONS,delta,dochecks=dochecks)
+	if (fwdflag and revflag):
+		itrmdt = custinv(Grev) - Ty@Gfwd@Tydag
+		if dochecks == True and (np.isnan(itrmdt).any() or np.isinf(itrmdt).any()):
+			warnings.warn(f"FOUND overflow in itrmdt for omega = {omega}")
+			return np.zeros_like(H0,dtype=np.double)
+		G = custinv(itrmdt) 
+		NLDOS = (0.5/np.pi) * (np.real(G)* np.sin(kx*r) - np.imag(G)*np.cos(kx*r)) #TODO:notice the relative factor of 2 in comparison to definition of LDOS
+		if dochecks == True and (np.isnan(NLDOS).any() or np.isinf(NLDOS).any()):
+			warnings.warn(f"FOUND overflow in NLDOS for omega = {omega}")
+			return np.zeros_like(H0,dtype=np.double)
+	else: 
+		NLDOS = np.zeros_like(H0,dtype=np.double)
+	return NLDOS
 
 
 
