@@ -8,6 +8,7 @@
 *.npz
 *.out
 *.mp4
+*.swp
 /.BLGvenv
 /Cuba-4.2.2/*
 /MulitNest/*

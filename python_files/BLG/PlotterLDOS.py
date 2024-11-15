@@ -15,7 +15,9 @@ if not os.path.exists(path_to_dump):
 # filename = 'v3BLG_LDOS_11_2441853.h5'
 # filename = 'BLGsolveRGF_3393566.h5'
 # filename = 'BLGsolveRGF_3400662.h5'
-filename = 'CUHREBLGsolveRGF_3421462.h5'
+# filename = 'CUHREBLGsolveRGF_3421462.h5'
+filename = 'Om6CUHREBLGsolveRGF_3450657.h5'
+
 try:
 	load_dict = h52dict(os.path.join(path_to_dump,filename))
 except FileNotFoundError:
