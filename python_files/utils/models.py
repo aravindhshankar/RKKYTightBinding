@@ -2,6 +2,7 @@ import numpy as np
 from dataclasses import dataclass
 
 class Graphene:
+	dimH = 4
 	def __init__(self, epsB=0., epsA=0., t=1., a=1.):
 		self.epsB = epsB
 		self.epsA = epsA
@@ -19,6 +20,7 @@ class Graphene:
 
 
 class BLG:
+	dimH = 8
 	def __init__(self, epsA1 = 0, deltaprime = 0.022, epsA2 = None, epsB1 = None, epsB2 = 0, gamma0 = 3.16, gamma1 = 0.381, gamma3 = 0.38, gamma4 = 0.14):
 		self.epsA1 = epsA1
 		self.deltaprime = deltaprime

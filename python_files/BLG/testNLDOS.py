@@ -10,6 +10,7 @@ import time
 from FastRGF.solveRGF import MOMfastrecDOSfull, MOMfastrecNLDOSfull
 from utils.h5_handler import *
 from utils.decorators import cubify
+from utils.models import BLG,Graphene
 import pycuba
 from dask.distributed import Client
 
@@ -32,14 +33,19 @@ def test_Ginfkx():
 	# omega = 0.000444967
 	# omega = 0.000740532
 	# omega = 2e-2
+	# blg = BLG()	
+	blg = Graphene()	
+	ret_H0 = blg.ret_H0
+	ret_Ty = blg.ret_Ty
 	omega = 3e-4
-	r = 2
+	r = 20
 	omegavals = (omega,)
 	kxvals = np.sort(np.concatenate((np.linspace(-0.05,0.05,5000,dtype=np.double), np.linspace(-np.pi,np.pi,500,dtype=np.double))))
 	dochecks = False
-	delta = 5e-3 * omega
+	# delta = 5e-3 * omega
+	delta = 5e-2 * omega
 	RECURSIONS = 30
-	dimH = 8
+	dimH = blg.dimH
 	num_pp = 2000
 	start, stop = kxvals[0], kxvals[-1]
 	start_time = time.perf_counter()
@@ -101,8 +107,8 @@ def test_Ginfkx():
 
 	for peak in peakvals:
 		ax.axvline(peak, c='r', ls = '--')
-		ax.axvline(peak-eta, c='gray', ls = '--',alpha=0.5)
-		ax.axvline(peak+eta, c='gray', ls = '--',alpha=0.5)
+		ax.axvline(peak-eta, c='gray', ls = '--',alpha=0.2)
+		ax.axvline(peak+eta, c='gray', ls = '--',alpha=0.2)
 
 	# for num_pp in [2000]: #checking convergence
 	# 	print('Started simpson integrate WITH peaks')
@@ -124,9 +130,10 @@ def test_Ginfkx():
 def helper_LDOS_mp(omega):
 	idx_x, idx_y = 0,0
 	dochecks = False
-	delta = 5e-3 * omega
+	# delta = 5e-3 * omega # for BLG 
+	delta = 5e-2 * omega # for graphene 
 	RECURSIONS = 30
-	dimH = 8
+	dimH = blg.dimH
 	
 	##### initialize cubify ######
 	cubify.set_limits(-np.pi,np.pi)
