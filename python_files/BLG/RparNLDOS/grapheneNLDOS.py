@@ -64,8 +64,9 @@ def helper_mp(omega,r):
 def process_r(r_index):
 	r_values = np.linspace(1, 20, 20)  # Example r values, replace with your own
 	r = r_values[r_index]
-	omegavals = [0.0003,0.003,0.03,0.3]
-	# omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-4),np.log10(1e-2),500),np.linspace(1e-2+eps,5e-1,50))))
+	# omegavals = [0.0003,0.003,0.03,0.3]
+	eps = 1e-5
+	omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-4),np.log10(1e-2),500),np.linspace(1e-2+eps,5e-1,50))))
 
 	# PROCESSES = int(os.environ.get('SLURM_NTASKS','2'))
 	# client = Client(threads_per_worker=1, n_workers=PROCESSES)
