@@ -9,6 +9,7 @@
 *.out
 *.mp4
 *.swp
+*.err
 /.BLGvenv
 /Cuba-4.2.2/*
 /MulitNest/*

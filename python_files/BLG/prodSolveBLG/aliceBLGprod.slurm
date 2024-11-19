@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=CUHREBLGsolveRGF
+#SBATCH --job-name=Om6CUHREBLGsolveRGF
 #SBATCH --output=%x_%j.out
 #SBATCH --mail-user="shankar@lorentz.leidenuniv.nl"
 #SBATCH --mail-type="ALL"
-#SBATCH --mem-per-cpu=512M
+#SBATCH --mem-per-cpu=2G
 #SBATCH --time=0-22:00:00
 #SBATCH --partition=cpu-medium
 #SBATCH --nodes=1
-#SBATCH --ntasks=16
+#SBATCH --ntasks=8
 ##SBATCH --exclusive
 #SBATCH --cpus-per-task=1
 #

@@ -111,9 +111,9 @@ def helper_LDOS_mp(omega):
 	cubify.set_limits(-np.pi,np.pi)
 	NDIM = 2
 	KEY = 0
-	MAXEVAL = int(1e6)
+	MAXEVAL = int(1e5)
 	VERBOSE = 0
-	EPSREL = 1e-5
+	EPSREL = 1e-4
 	
 	@cubify.Cubify
 	def call_int(kx): 
@@ -131,27 +131,28 @@ def helper_LDOS_mp(omega):
 	return intval
 
 def dask_LDOS():
-	# omegavals = np.logspace(np.log10(1e-5), np.log10(1e-1), num = int(2040))
-	# omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-4),np.log10(1e-2),500),np.linspace(1e-2+eps,5e-1,50))))
-	omegavals = [0.0003,0.003,0.03,0.3]
+    #omegavals = np.logspace(np.log10(1e-5), np.log10(1e-1), num = int(2040))
+    eps = 1e-4
+    omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-6),np.log10(1e-2),300),np.linspace(1e-2+eps,5e-1,50))))
+    #omegavals = [0.0003,0.003,0.03,0.3]
 
-	PROCESSES = int(os.environ.get('SLURM_NTASKS','2'))
-	print(f'PROCESSES = {PROCESSES}')
-	client = Client(threads_per_worker=1, n_workers=PROCESSES)
+    PROCESSES = int(os.environ.get('SLURM_NTASKS','2'))
+    print(f'PROCESSES = {PROCESSES}')
+    client = Client(threads_per_worker=1, n_workers=PROCESSES, timeout="10m", memory_limit="2GB")
 
-	startmp = time.perf_counter()
-	LDOS = client.gather(client.map(helper_LDOS_mp,omegavals))
-	stopmp = time.perf_counter()
+    startmp = time.perf_counter()
+    LDOS = client.gather(client.map(helper_LDOS_mp,omegavals,pure=False))
+    stopmp = time.perf_counter()
 
-	elapsedmp = stopmp-startmp
-	print(f'DASK parrallelization with {PROCESSES} processes finished in time {elapsedmp} seconds')
-	
-	savedict = {'omegavals' : omegavals,
-				'LDOS' : LDOS,
-				'INFO' : '[0,0] site of -1/pi Im G, delta = 5e-3 * omega, with EPSREL = {1e-5}'
-				}
-	savefileoutput = savename + '.h5'
-	dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
+    elapsedmp = stopmp-startmp
+    print(f'DASK parrallelization with {PROCESSES} processes finished in time {elapsedmp} seconds')
+
+    savedict = {'omegavals' : omegavals,
+            'LDOS' : LDOS,
+            'INFO' : '[0,0] site of -1/pi Im G, delta = 5e-3 * omega, with EPSREL = {1e-5}'
+            }
+    savefileoutput = savename + '.h5'
+    dict2h5(savedict,os.path.join(path_to_output,savefileoutput), verbose=True)
 
 
 if __name__ == '__main__': 
