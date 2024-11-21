@@ -46,7 +46,7 @@ def test_Ginfkx():
 
     def call_int(kx) : 
         Gkx = MOMfastrecNLDOSfull(omega,r,kx,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
-        return np.array((Gkx[0,0], Gkx[1,1]))
+        return np.array((Gkx[0,0], Gkx[1,1], Gkx[2,2], Gkx[3,3]))
 
     print('STARTED CUHRE')
     ##### initialize cubify ######
@@ -54,16 +54,17 @@ def test_Ginfkx():
     Integrand = cubify.VECCubify(call_int)
     # Integrand = cubify.Cubify(call_int)
     NDIM = 2
+    NCOMP = 4 
     KEY = 0
     MAXEVAL = int(1e5)
     verbose = 0
     start_time = time.perf_counter()
-    CUHREdict = pycuba.Cuhre(Integrand, NDIM, ncomp = 2, key=KEY, maxeval=MAXEVAL, verbose=verbose,epsrel=1e-4) 
+    CUHREdict = pycuba.Cuhre(Integrand, NDIM, ncomp = NCOMP, key=KEY, maxeval=MAXEVAL, verbose=verbose,epsrel=1e-4) 
     elapsed = time.perf_counter() - start_time
     print(f'Finished CUHRE in {elapsed} sec(s).')
-    print('CUHRE intval = ', CUHREdict)
-
-
+    print('CUHRE dict = ', CUHREdict)
+    intarr = np.array([CUHREdict['results'][i]['integral'] for i in range(NCOMP)], dtype = np.float64)
+    print('integrated array = ', intarr) 
 
 
 
