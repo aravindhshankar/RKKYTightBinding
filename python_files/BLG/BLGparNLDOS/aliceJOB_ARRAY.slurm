@@ -2,6 +2,7 @@
 #SBATCH --job-name=NLDOSblg    # Job name
 #SBATCH --array=0-20                # Job array range: one task per r value
 #SBATCH --ntasks=1                  # Number of tasks per job (1 because we use multi-threading, not MPI)
+#SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8           # Number of CPU cores per task
 #SBATCH --mem=4G                    # Memory allocation per task
 #SBATCH --time=12:00:00             # Maximum runtime per task

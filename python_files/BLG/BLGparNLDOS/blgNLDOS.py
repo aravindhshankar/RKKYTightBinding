@@ -23,6 +23,8 @@ if not os.path.exists(path_to_output):
     print("Outputs directory created at ", path_to_output)
 
 
+print = partial(print, flush=True) #To see output at each step in alice
+
 def helper_mp(omega,r):
     idx_x, idx_y = 0,0
     dochecks = False
@@ -63,12 +65,15 @@ def process_r(r_index):
     r = r_values[r_index]
     # omegavals = [0.0003,0.003,0.03,0.3]
     eps = 1e-5
-    omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-4),np.log10(1e-2),500),np.linspace(1e-2+eps,5e-1,50))))
+    omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-6),np.log10(1e-2),300),np.linspace(1e-2+eps,5e-1,50))))
 
     PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','2'))
     start_time = time.perf_counter()
     # Initialize Dask cluster
-    cluster = LocalCluster(n_workers=PROCESSES, processes=True)
+    # scheduler_port = 8786 + r_index
+    # local_dir = f"/tmp/dask-task-{r_index}-{os.getpid()}"
+    # cluster = LocalCluster(n_workers=PROCESSES, processes=True, scheduler_port=scheduler_port, local_directory=local_dir) 
+    cluster = LocalCluster(n_workers=PROCESSES, processes=True) 
     client = Client(cluster)
 
     # Create Dask tasks
