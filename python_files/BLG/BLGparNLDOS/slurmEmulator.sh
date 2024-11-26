@@ -7,7 +7,7 @@ mkdir -p logs
 for $SLURM_ARRAY_TASK_ID in $(seq 0 20)
 do 
 	echo "Starting task $SLURM_ARRAY_TASK_ID"
-	python blgNLDOS.py $SLURM_ARRAY_TASK_ID
+	python blgNLDOS.py $SLURM_ARRAY_TASK_ID > logs/r_$SLURM_ARRAY_TASK_ID.out 2> logs/r_$SLURM_ARRAY_TASK_ID.err 
 	echo "Task ID $SLURM_ARRAY_TASK_ID completed"
 done
 #
