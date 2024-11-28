@@ -2,12 +2,13 @@
 export SLURM_CPUS_PER_TASK=6
 source /data1/shankar/RKKYTightBinding/.BLGvenv/bin/activate  #path to venv installed using requirements.txt
 #
-mkdir -p logs 
+$(LOGS)=logs/turnoffg4
+mkdir -p $(LOGS)
 #
-for SLURM_ARRAY_TASK_ID in {1..20}
+for SLURM_ARRAY_TASK_ID in {1..10}
 do 
 	echo "Starting task $SLURM_ARRAY_TASK_ID"
-	python3.10 blgNLDOS.py $SLURM_ARRAY_TASK_ID > logs/r_$SLURM_ARRAY_TASK_ID.out 2> logs/r_$SLURM_ARRAY_TASK_ID.err 
+	python3.10 turnOffg4delp.py $SLURM_ARRAY_TASK_ID > $(LOGS)/r_$SLURM_ARRAY_TASK_ID.out 2> $(LOGS)/r_$SLURM_ARRAY_TASK_ID.err 
 	echo "Task ID $SLURM_ARRAY_TASK_ID completed"
 done
 #
