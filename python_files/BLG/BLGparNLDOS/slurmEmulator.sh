@@ -4,7 +4,7 @@ source /data1/shankar/RKKYTightBinding/.BLGvenv/bin/activate  #path to venv inst
 #
 mkdir -p logs 
 #
-for SLURM_ARRAY_TASK_ID in $(seq 0 20)
+for SLURM_ARRAY_TASK_ID in {1..20}
 do 
 	echo "Starting task $SLURM_ARRAY_TASK_ID"
 	python3.10 blgNLDOS.py $SLURM_ARRAY_TASK_ID > logs/r_$SLURM_ARRAY_TASK_ID.out 2> logs/r_$SLURM_ARRAY_TASK_ID.err 
