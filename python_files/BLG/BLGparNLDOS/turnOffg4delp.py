@@ -28,7 +28,8 @@ print = partial(print, flush=True) #To see output at each step in alice
 def helper_mp(omega,r):
     idx_x, idx_y = 0,0
     dochecks = False
-    delta = 5e-3 * omega # for BLG 
+    # delta = 5e-3 * omega # for BLG 
+    delta = 5e-2 * omega # for turning off gamma 4 this is better 
     RECURSIONS = 30
     blg = BLG(deltaprime=0, gamma4=0) #intialize model
     dimH = blg.dimH
