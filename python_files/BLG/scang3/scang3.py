@@ -48,7 +48,8 @@ def helper_mp(omega,g3):
 
     @cubify.VECCubify
     def call_int(kx) : 
-        Gkx = MOMfastrecNLDOSfull(omega,0,kx,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta) # second argument is r = 0 to get LDOS 
+        # Gkx = MOMfastrecNLDOSfull(omega,0,kx,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta) # second argument is r = 0 to get LDOS 
+        Gkx = MOMfastrecNLDOSfull(omega,0,kx,ret_H0(kx),ret_Ty(kx).T.conj(),RECURSIONS,delta) # this is the right hopping matrix for fast recursion
         return np.array((Gkx[0,0], Gkx[1,1], Gkx[2,2], Gkx[3,3]))
 
     ################### starting integration #################
