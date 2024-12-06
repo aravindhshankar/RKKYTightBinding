@@ -31,8 +31,11 @@ print = partial(print, flush=True) #To see output at each step in alice
 def helper_mp(omega,g3):
     # delta = 5e-3 * omega # for BLG 
     delta = 5e-2 * omega # for turning off gamma 4 this is better 
-    m = None #TODO
-    v3 = None #TODO
+    default_blg = BLG()
+    gamma0 = default_blg.gamma0
+    gamma1 = default_blg.gamma1
+    m = (3.*gamma0**2)/(4.*gamma1) + (g3)/(8.)
+    v3 = np.sqrt(3.) * g3 * 0.5
     ##### initialize cubify ######
     cubify.set_limits(-np.pi,np.pi) #not sure about this - you should integrate from -inf to inf right? 
     NDIM = 2
@@ -58,7 +61,7 @@ def helper_mp(omega,g3):
 
 
 def process_g3(g3_index):
-    g3_values = np.array([0.01,0.1,0.2,0.3,0.36,0.38,0.4,0.5,0.6,0.7,0.8,1.0,3.0]) # list of gamma3 values to scan 
+    g3_values = np.array([0.01,0.1,0.2,0.3,0.36,0.38,0.4,0.5,0.6,0.7,0.8,1.0,3.0]) # list of gamma3 values to scan , 5th 0 based index is the expt one
     if g3_index > len(g3_values) - 1 :
         raise(Exception('g3_index OUT OF BOUNDS!!!!!! aborting......'))
         exit(1)
@@ -88,7 +91,7 @@ def process_g3(g3_index):
     savedict = {'omegavals' : omegavals,
                 'gamma3' : g3,
                 'LDOS' : results,
-                'INFO' : '[0,1,2,3] sites of the default BLG model , delta = 5e-2 * omega, deltprime=gamma4=0'
+                'INFO' : 'two band model based on mccann-koshino with only h0 and hw , delta = 5e-2 * omega, deltprime=gamma4=0'
                 }
     return savedict
 
