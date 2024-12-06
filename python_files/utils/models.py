@@ -53,7 +53,8 @@ class BLG:
 		M[0,0] = self.epsB2
 		M[0,1] = -self.gamma3
 		M[0,2] = -self.gamma0
-		M[0,3] = self.gamma1
+		# M[0,3] = self.gamma1
+		M[0,3] = self.gamma4 #changed! This was a typo that said gamma1 before
 		M[1,1] = self.epsA1
 		M[1,2] = self.gamma4
 		M[1,3] = -self.gamma0
