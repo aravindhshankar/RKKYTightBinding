@@ -45,14 +45,15 @@ def helper_mp(omega,g3):
     VERBOSE = 0
     EPSREL = 1e-3
 
-    @cubify.VECCubify
+    @cubify.Cubify
     def call_int(kx) : 
         return anaGkx(kx, omega, delta, m, v3)
 
     ################### starting integration #################
     start_time = time.perf_counter() if __debug__ else 0.0
-    CUHREdict = pycuba.Cuhre(call_int, NDIM, ncomp = NCOMP, key=KEY, maxeval=MAXEVAL, verbose=VERBOSE, epsrel=EPSREL) 
-    intarr = np.array([CUHREdict['results'][i]['integral'] for i in range(NCOMP)], dtype = np.float64)
+    CUHREdict = pycuba.Cuhre(call_int, ndim=NDIM, key=KEY, maxeval=MAXEVAL, verbose=VERBOSE, epsrel=EPSREL) 
+    # intarr = np.array([CUHREdict['results'][i]['integral'] for i in range(NCOMP)], dtype = np.float64)
+    intarr = CUHREdict['results'][0]['integral'] 
     if __debug__: 
         elapsed = time.perf_counter() - start_time
         print(f"Finished integration for omega = {omega:.6f} in {elapsed} sec(s) with fail = {CUHREdict['fail']}, neval = {CUHREdict['neval']}.")
