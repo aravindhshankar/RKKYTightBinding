@@ -16,7 +16,7 @@ import pycuba
 from dask.distributed import Client, LocalCluster
 from dask import delayed
 
-path_to_output = '../../Output/scang3/'
+path_to_output = '../../Output/scang3/NewBLGTdag'
 
 if not os.path.exists(path_to_output):
     os.makedirs(path_to_output)
@@ -44,12 +44,12 @@ def helper_mp(omega,g3):
     NCOMP = 4
     MAXEVAL = int(5e5)
     VERBOSE = 0
-    EPSREL = 1e-4
+    EPSREL = 1e-3
 
     @cubify.VECCubify
     def call_int(kx) : 
         # Gkx = MOMfastrecNLDOSfull(omega,0,kx,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta) # second argument is r = 0 to get LDOS 
-        Gkx = MOMfastrecNLDOSfull(omega,0,kx,ret_H0(kx),ret_Ty(kx).T.conj(),RECURSIONS,delta) # this is the right hopping matrix for fast recursion
+        Gkx = MOMfastrecNLDOSfull(omega,0,kx,ret_H0(kx),ret_Ty(kx).conj().T,RECURSIONS,delta) # this is the right hopping matrix for fast recursion
         return np.array((Gkx[0,0], Gkx[1,1], Gkx[2,2], Gkx[3,3]))
 
     ################### starting integration #################
