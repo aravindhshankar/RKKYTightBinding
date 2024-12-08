@@ -28,7 +28,8 @@ print = partial(print, flush=True) #To see output at each step in alice
 def helper_mp(omega,r):
     idx_x, idx_y = 0,0
     dochecks = False
-    delta = 5e-3 * omega # for BLG 
+    # delta = 5e-3 * omega # for BLG 
+    delta = 5e-3 * omega if omega > 1e-3 else 5e-2 * omega
     RECURSIONS = 30
     blg = BLG() #intialize model
     dimH = blg.dimH
@@ -88,7 +89,7 @@ def process_r(r_index):
     savedict = {'omegavals' : omegavals,
                 'r' : r,
                 'NLDOS' : results,
-                'INFO' : '[0,1,2,3] sites of the default BLG model , delta = 5e-3 * omega with v2 model and correct right hopping matrix'
+                'INFO' : '[0,1,2,3] sites of the default BLG model , delta = 5e-3 * omega if omega > 1e-3 else 5e-2 * omega with v2 model and correct right hopping matrix'
                 }
     return savedict
 

@@ -35,7 +35,7 @@ axlist = [figlist[i].subplots(2) for i in range(NUMGS)]
 
 # jobarray = np.arange(0,20,4,dtype=int)
 # jobarray = [0,5,12,15,20]
-jobarray = [0,]
+jobarray = [0,1]
 for i, job_idx in enumerate(jobarray):
     col = 'C' + str(i)
     filename = f'results_r_{job_idx}.h5'
