@@ -16,7 +16,7 @@ import pycuba
 from dask.distributed import Client, LocalCluster
 from dask import delayed
 
-path_to_output = '../../Output/BLGnldos/'
+path_to_output = '../../Output/NEWBLGnldos/'
 
 if not os.path.exists(path_to_output):
     os.makedirs(path_to_output)
@@ -46,7 +46,7 @@ def helper_mp(omega,r):
 
     @cubify.VECCubify
     def call_int(kx) : 
-        Gkx = MOMfastrecNLDOSfull(omega,r,kx,ret_H0(kx),ret_Ty(kx),RECURSIONS,delta)
+        Gkx = MOMfastrecNLDOSfull(omega,r,kx,ret_H0(kx),ret_Ty(kx).conj().T,RECURSIONS,delta) #adding the right hopping matrix as needed for fast recursion in v2
         return np.array((Gkx[0,0], Gkx[1,1], Gkx[2,2], Gkx[3,3]))
 
     ################### starting integration #################
@@ -88,7 +88,7 @@ def process_r(r_index):
     savedict = {'omegavals' : omegavals,
                 'r' : r,
                 'NLDOS' : results,
-                'INFO' : '[0,1,2,3] sites of the default BLG model , delta = 5e-3 * omega'
+                'INFO' : '[0,1,2,3] sites of the default BLG model , delta = 5e-3 * omega with v2 model and correct right hopping matrix'
                 }
     return savedict
 
