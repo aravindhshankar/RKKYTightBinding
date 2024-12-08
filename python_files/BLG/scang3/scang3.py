@@ -73,7 +73,7 @@ def process_g3(g3_index):
     eps = 1e-5
     omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-6),np.log10(1e-2),300),np.linspace(1e-2+eps,1.2,60))))
 
-    PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','2'))
+    PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','6'))
     start_time = time.perf_counter()
     # Initialize Dask cluster
     # scheduler_port = 8786 + r_index
@@ -94,7 +94,7 @@ def process_g3(g3_index):
     savedict = {'omegavals' : omegavals,
                 'gamma3' : g3,
                 'LDOS' : results,
-                'INFO' : '[0,1,2,3] sites of the default BLG model , delta = 5e-2 * omega, deltprime=gamma4=0'
+                'INFO' : '[0,1,2,3] sites of the v2 BLG model with the now right hoppping matrix Ty.conj().T as well , delta = 5e-2 * omega, deltprime=gamma4=0'
                 }
     return savedict
 
