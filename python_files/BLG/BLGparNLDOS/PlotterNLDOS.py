@@ -9,8 +9,8 @@ from utils.h5_handler import *
 from scipy.special import j0
 # path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/BLGnldosTurnoffg4delp'
 # path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/BLGnldosfigsTurnoffg4delp'
-path_to_dump = '../../Output/NEWBLGnldos/'
-path_to_fig = '../../Figures/NEWBLGnldos/'
+path_to_dump = '../../Output/NEWBLGnldos/NegEnergies/'
+path_to_fig = '../../Figures/NEWBLGnldos/NegEnergies/'
 if not os.path.exists(path_to_dump): 
 	raise exception('path to dump not found')
 	exit(1)
@@ -31,11 +31,11 @@ def analyticNLDOS_graphene(omega,r,vF):
 NUMGS = 4 #number of dictionary entries in the load file
 
 figlist = [plt.figure() for i in range(NUMGS)]
-axlist = [figlist[i].subplots(2) for i in range(NUMGS)]
+axlist = [figlist[i].subplots(3) for i in range(NUMGS)]
 
 # jobarray = np.arange(0,20,4,dtype=int)
 # jobarray = [0,5,12,15,20]
-jobarray = [0,1]
+jobarray = [0,]
 for i, job_idx in enumerate(jobarray):
     col = 'C' + str(i)
     filename = f'results_r_{job_idx}.h5'
@@ -56,6 +56,7 @@ for i, job_idx in enumerate(jobarray):
         ax[0].plot(omegavals, NLDOS.T[j], '.-', c=col, label = f'r = {rval}')
         # ax[0].plot(omegavals, analytic, '--', c=col)
         ax[1].loglog(omegavals[omegavals<1],NLDOS.T[j][omegavals<1],c=col, label = f'r = {rval}')
+        ax[2].loglog(np.abs(omegavals)[omegavals<0],NLDOS.T[j][omegavals<0],c=col, label = f'r = {rval}')
 
         ax[0].set_xlabel('omega')
         ax[0].set_title(f'BLG NLDOS site [{j},{j}] ')
@@ -64,6 +65,9 @@ for i, job_idx in enumerate(jobarray):
         ax[1].set_ylabel(r'G(r,$\omega$)')
         ax[1].set_xlabel('omega')
         ax[1].legend()
+        ax[2].set_ylabel(r'G(r,$\omega$)')
+        ax[2].set_xlabel('-omega')
+        ax[2].legend()
 
 for j in range(NUMGS):
     savefigname = f'BLGNLDOS_{j,j}.pdf'
