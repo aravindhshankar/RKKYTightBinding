@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from utils.h5_handler import *
 from scipy.special import j0
-# path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/BLGnldosTurnoffg4delp'
-# path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/BLGnldosfigsTurnoffg4delp'
+# path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/NewBLGturnoffg4LDOS/'
+# path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/NewBLGturnoffg4LDOS'
 path_to_dump = '../../Output/NEWBLGnldos/NegEnergies/'
 path_to_fig = '../../Figures/NEWBLGnldos/NegEnergies/'
 if not os.path.exists(path_to_dump): 

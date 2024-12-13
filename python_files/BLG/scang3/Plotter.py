@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 from utils.h5_handler import *
 from scipy.special import j0
-path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/scang3/NewBLGTdag/'
-path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/scang3/NewBLGTdag/'
-# path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/BLGnldos'
-# path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/BLGnldosfigs'
+# path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/scang3/NewBLGTdag/'
+# path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/scang3/NewBLGTdag/'
+path_to_dump = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Output/NewBLGturnoffg4LDOS/'
+path_to_fig = '/Users/aravindhswaminathan/Documents/GitHub/RKKYTightBinding/python_files/Figures/NewBLGturnoffg4LDOS/'
 if not os.path.exists(path_to_dump): 
 	raise exception('path to dump not found')
 	exit(1)

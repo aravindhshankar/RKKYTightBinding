@@ -15,16 +15,18 @@ if not os.path.exists(path_to_dump):
 	raise exception('path to dump not found')
 	exit(1)
 
-
+if not os.path.exists(path_to_fig):
+    print('Figures directory does not exist, creating .....')
+    os.makedirs(path_to_fig, exist_ok = True)
 
 NUMGS = 1 #number of dictionary entries in the load file
 
 figlist = [plt.figure() for i in range(NUMGS)]
 axlist = [figlist[i].subplots(2) for i in range(NUMGS)]
 
-jobarray = np.arange(0,13,1,dtype=int)
+# jobarray = np.arange(0,13,1,dtype=int)
 # jobarray = [0,5,12,15,20]
-# jobarray = [0,1,2]
+jobarray = [5,]
 for i, job_idx in enumerate(jobarray):
     col = 'C' + str(i)
     filename = f'results_g3_{job_idx}.h5'
@@ -53,8 +55,8 @@ for i, job_idx in enumerate(jobarray):
         ax[1].set_xlabel('omega')
         ax[1].legend()
 
-# for j in range(NUMGS):
-    # savefigname = f'BLGNLDOS_{j,j}.pdf'
-    # figlist[j].savefig(os.path.join(path_to_fig, savefigname))
+for j in range(NUMGS):
+    savefigname = f'BLGNLDOS_{j,j}.pdf'
+    figlist[j].savefig(os.path.join(path_to_fig, savefigname))
 
 plt.show()
