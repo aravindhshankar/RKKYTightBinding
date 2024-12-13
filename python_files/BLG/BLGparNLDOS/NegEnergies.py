@@ -77,7 +77,7 @@ def process_r(r_index):
     omegavals = np.sort(np.concatenate((np.logspace(np.log10(1e-6),np.log10(1e-2),300),np.linspace(1e-2+eps,5e-1,50))))
     omegavals = np.concatenate((-1.*omegavals[::-1], omegavals))
 
-    PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','2'))
+    PROCESSES = int(os.environ.get('SLURM_CPUS_PER_TASK','6'))
     start_time = time.perf_counter()
     # Initialize Dask cluster
     # scheduler_port = 8786 + r_index
