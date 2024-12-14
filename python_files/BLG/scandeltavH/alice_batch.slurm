@@ -15,7 +15,7 @@
 mkdir -p logs
 
 # Print job details for logging purposes
-echo "Starting job $SLURM_JOB_ID
+echo "Starting job $SLURM_JOB_ID"
 echo "Running on host $(hostname)"
 echo "Using $SLURM_CPUS_PER_TASK CPUs"
 echo "Memory per task: $SLURM_MEM_PER_NODE"
