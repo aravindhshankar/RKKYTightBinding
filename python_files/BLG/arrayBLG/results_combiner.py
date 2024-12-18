@@ -18,18 +18,22 @@ def combine_results():
         full_results.append(chunk)
     
     # Concatenate results along the omega axis
-    final_results = np.concatenate(full_results, axis=1)
+    final_results = np.concatenate(full_results, axis=2)
     
-    # Convert to DataFrame
-    df = pd.DataFrame(
-        final_results, 
-        index=[f'r_{r:.4f}' for r in rvals],  # Row labels
-        columns=[f'omega_{omega:.4f}' for omega in omegavals]  # Column labels
-    )
+    # Create separate DataFrames for each of the 4 output values
+    output_dataframes = {}
+    output_names = ['f1', 'f2', 'f3', 'f4']  # Modify these names as needed
     
-    # Save as CSV
-    df.to_csv('complete_grid_results.csv')
-    print(f"Combined results saved as CSV. Shape: {df.shape}")
+    for i, name in enumerate(output_names):
+        df = pd.DataFrame(
+            final_results[i, :, :], 
+            index=[f'r_{r:.4f}' for r in rvals],  # Row labels
+            columns=[f'omega_{omega:.4f}' for omega in omegavals]  # Column labels
+        )
+        df.to_csv(f'{name}_complete_grid_results.csv')
+        output_dataframes[name] = df
+    
+    print(f"Combined results saved. Shape of each output: {final_results.shape[1:]}")
     
     # # Optional: remove the tmp directory after combining
     # shutil.rmtree('tmp')

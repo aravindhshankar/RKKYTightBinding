@@ -8,9 +8,10 @@ def f(r, omega):
     """
     Your grid calculation function.
     Replace this with your actual implementation.
+    Returns an array of 4 elements for each (r, omega) pair.
     """
     # Example placeholder function - replace with your actual calculation
-    return r * np.sin(omega)
+    return np.array([r * np.sin(omega), r * np.cos(omega), r + omega, r * omega])
 
 def main():
     # Create tmp directory if it doesn't exist
@@ -30,11 +31,11 @@ def main():
     # Select the subset of omega values for this worker
     worker_omegavals = omegavals[start_idx:end_idx]
     
-    # Perform the grid calculation
-    results = np.zeros((len(rvals), len(worker_omegavals)))
+    # Perform the grid calculation (4 result values for each grid point)
+    results = np.zeros((4, len(rvals), len(worker_omegavals)))
     for i, r in enumerate(rvals):
         for j, omega in enumerate(worker_omegavals):
-            results[i, j] = f(r, omega)
+            results[:, i, j] = f(r, omega)
     
     # Save results to a file in tmp directory
     output_filename = os.path.join('tmp', f'results_chunk_{task_id}.npy')
