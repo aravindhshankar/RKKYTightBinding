@@ -2,16 +2,8 @@
 import numpy as np
 import os
 import sys
-from grid_config import rvals, omegavals
-
-def f(r, omega):
-    """
-    Your grid calculation function.
-    Replace this with your actual implementation.
-    Returns an array of 4 elements for each (r, omega) pair.
-    """
-    # Example placeholder function - replace with your actual calculation
-    return np.array([r * np.sin(omega), r * np.cos(omega), r + omega, r * omega])
+from grid_config import rvals, omegavals, NUMGS
+from grid_config import helper_mp as f
 
 def main():
     # Create tmp directory if it doesn't exist
@@ -19,7 +11,7 @@ def main():
 
     # Get the array task ID and total number of workers from Slurm environment variables
     task_id = int(os.environ.get('SLURM_ARRAY_TASK_ID', 0))
-    total_workers = int(os.environ.get('SLURM_ARRAY_TASK_COUNT', 60))
+    total_workers = int(os.environ.get('SLURM_ARRAY_TASK_COUNT', 1))
     
     # Calculate the chunk size for omega values
     chunk_size = len(omegavals) // total_workers
@@ -31,8 +23,8 @@ def main():
     # Select the subset of omega values for this worker
     worker_omegavals = omegavals[start_idx:end_idx]
     
-    # Perform the grid calculation (4 result values for each grid point)
-    results = np.zeros((4, len(rvals), len(worker_omegavals)))
+    # Perform the grid calculation (NUMGS result values for each grid point)
+    results = np.zeros((NUMGS, len(rvals), len(worker_omegavals)))
     for i, r in enumerate(rvals):
         for j, omega in enumerate(worker_omegavals):
             results[:, i, j] = f(r, omega)

@@ -1,8 +1,9 @@
+#results_combiner.py
 import numpy as np
 import pandas as pd
 import os
 import shutil
-from grid_config import rvals, omegavals
+from grid_config import rvals, omegavals, NUMGS, DELTEMPFLAG
 
 def combine_results():
     # Find all result chunk files in tmp directory
@@ -21,23 +22,24 @@ def combine_results():
     final_results = np.concatenate(full_results, axis=2)
     
     # Create separate DataFrames for each of the 4 output values
-    output_dataframes = {}
-    output_names = ['f1', 'f2', 'f3', 'f4']  # Modify these names as needed
+    # output_names = ['f1', 'f2', 'f3', 'f4']  # Modify these names as needed
+    output_names = [f'f{i}' for i in range(NUMGS)]
+    np.testing.assert_equal(len(output_names), NUMGS)
     
     for i, name in enumerate(output_names):
         df = pd.DataFrame(
             final_results[i, :, :], 
-            index=[f'r_{r:.4f}' for r in rvals],  # Row labels
-            columns=[f'omega_{omega:.4f}' for omega in omegavals]  # Column labels
+            index=[f'{r}' for r in rvals],  # Row labels
+            columns=[f'{omega}' for omega in omegavals]  # Column labels
         )
         df.to_csv(f'{name}_complete_grid_results.csv')
-        output_dataframes[name] = df
     
     print(f"Combined results saved. Shape of each output: {final_results.shape[1:]}")
     
-    # # Optional: remove the tmp directory after combining
-    # shutil.rmtree('tmp')
-    # print("Temporary results directory removed.")
+    # Optional: remove the tmp directory after combining
+    if DELTEMPFLAG == True :
+        shutil.rmtree('tmp')
+        print("Temporary results directory removed.")
 
 if __name__ == '__main__':
     combine_results()
