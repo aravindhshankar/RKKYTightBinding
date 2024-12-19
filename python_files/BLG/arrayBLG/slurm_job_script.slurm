@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=grid_calculation
-#SBATCH --array=0-59# 60 total workers, max 20 running simultaneously 0-59%20
+#SBATCH --array=0-99
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G
-#SBATCH --time=1-8:00:00
+#SBATCH --time=15:00:00
 #SBATCH --output=logs/%A_%a.out     # Standard output log file (%A: job ID, %a: array index)
 #SBATCH --error=logs/%A_%a.err      # Standard error log file
-#SBATCH --partition=cpu-long      # Partition (queue) name
+#SBATCH --partition=cpu-medium      # Partition (queue) name
 #SBATCH --mail-type=ALL             # Notifications for job completion or failure
 #SBATCH --mail-user=shankar@lorentz.leidenuniv.nl # Email to send notifications (optional)
 

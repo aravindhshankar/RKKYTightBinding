@@ -11,6 +11,7 @@ def combine_results():
     
     # Sort files to ensure correct order
     result_files.sort(key=lambda x: int(x.split('_')[2].split('.')[0]))
+    print(result_files)
     
     # Load and combine results
     full_results = []
