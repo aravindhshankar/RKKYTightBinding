@@ -4,15 +4,13 @@ sys.path.insert(0,'..')
 sys.path.insert(0,'../..')
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import find_peaks
-from scipy.integrate import simpson, quad
 from functools import partial
 import time 
 from FastRGF.solveRGF import MOMfastrecNLDOSfull
 from utils.h5_handler import *
 from utils.decorators import cubify
 from utils.models import BLG,Graphene
-from utils.twoBandReducedBlg import Gkx as anaGkx 
+from utils.twoBandReducedBlg import Gkx as anaGkx # returns -1/pi Im G(kx,omega)
 import pycuba
 from dask.distributed import Client, LocalCluster
 from dask import delayed
@@ -23,21 +21,19 @@ if not os.path.exists(path_to_output):
     os.makedirs(path_to_output)
     print("Outputs directory created at ", path_to_output)
 
-
-# def Gkx(px, omega, eta, m, v3):
-
 print = partial(print, flush=True) #To see output at each step in alice
 
-def helper_mp(omega,g3):
+def helper_mp(omega,r):
     # delta = 5e-3 * omega # for BLG 
     delta = 5e-2 * omega # for turning off gamma 4 this is better 
     default_blg = BLG()
     gamma0 = default_blg.gamma0
     gamma1 = default_blg.gamma1
+    g3 = default_blg.gamma3
     m = (3.*gamma0**2)/(4.*gamma1) + (g3)/(8.)
     v3 = np.sqrt(3.) * g3 * 0.5
     ##### initialize cubify ######
-    cubify.set_limits(-np.pi,np.pi) #not sure about this - you should integrate from -inf to inf right? 
+    cubify.set_limits(-np.pi,np.pi) 
     NDIM = 2
     KEY = 0
     NCOMP = 1
