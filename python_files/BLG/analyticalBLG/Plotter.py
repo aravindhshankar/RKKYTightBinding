@@ -25,8 +25,8 @@ figlist = [plt.figure() for i in range(NUMGS)]
 axlist = [figlist[i].subplots(2) for i in range(NUMGS)]
 
 # jobarray = np.arange(0,13,1,dtype=int)
-jobarray = [0,5,12,15,20]
-# jobarray = [5,]
+# jobarray = [0,5,12,15,20]
+jobarray = [5,]
 for i, job_idx in enumerate(jobarray):
     col = 'C' + str(i)
     filename = f'results_g3_{job_idx}.h5'
