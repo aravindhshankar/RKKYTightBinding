@@ -1,7 +1,8 @@
 #!/bin/bash
 export SLURM_CPUS_PER_TASK=1
 export SLURM_ARRAY_TASK_COUNT=100
-source /data1/shankar/RKKYTightBinding/.BLGvenv/bin/activate  #path to venv installed using requirements.txt
+# source /data1/shankar/RKKYTightBinding/.BLGvenv/bin/activate  #path to venv installed using requirements.txt
+source /scratch/ashankar/RKKYTightBinding/.BLGvenv/bin/activate  #path to venv installed using requirements.txt
 #
 LOGS=logs
 mkdir -p $LOGS
