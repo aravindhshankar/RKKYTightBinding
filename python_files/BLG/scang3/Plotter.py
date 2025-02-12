@@ -56,8 +56,8 @@ for i, job_idx in enumerate(jobarray):
         ax[1].set_xlabel('omega')
         ax[1].legend()
 
-for j in range(NUMGS):
-    savefigname = f'BLGNLDOS_{j,j}.pdf'
-    figlist[j].savefig(os.path.join(path_to_fig, savefigname))
+# for j in range(NUMGS):
+    # savefigname = f'BLGNLDOS_{j,j}.pdf'
+    # figlist[j].savefig(os.path.join(path_to_fig, savefigname))
 
 plt.show()
