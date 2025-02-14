@@ -164,7 +164,8 @@ def MOMfastrecNLDOSfull(omega,r,kx,H0,Ty,RECURSIONS=20,delta=0.001,dochecks=Fals
 			warnings.warn(f"FOUND overflow in itrmdt for omega = {omega}")
 			return np.zeros_like(H0,dtype=np.double)
 		G = custinv(itrmdt) 
-		NLDOS = (0.5/np.pi) * (np.real(G)* np.sin(kx*r) - np.imag(G)*np.cos(kx*r)) #TODO:notice the relative factor of 2 in comparison to definition of LDOS
+		NLDOS = (-0.5/np.pi) * (np.real(G)* np.sin(kx*r) + np.imag(G)*np.cos(kx*r)) #This is with the correct convention of fourier transform
+		# NLDOS = (0.5/np.pi) * (np.real(G)* np.sin(kx*r) - np.imag(G)*np.cos(kx*r)) #TODO:notice the relative factor of 2 in comparison to definition of LDOS
 		if dochecks == True and (np.isnan(NLDOS).any() or np.isinf(NLDOS).any()):
 			warnings.warn(f"FOUND overflow in NLDOS for omega = {omega}")
 			return np.zeros_like(H0,dtype=np.double)
