@@ -6,3 +6,5 @@ h5py
 dask[complete]==2022.7.0
 pymultinest
 pandas==2.2.3
+jupyter 
+PyQt5
