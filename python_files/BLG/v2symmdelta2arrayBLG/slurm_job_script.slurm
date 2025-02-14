@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=grid_calculation
+#SBATCH --job-name=grid-calculation
 #SBATCH --array=0-99
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
@@ -27,7 +27,8 @@ module load Python/3.10.8-GCCcore-12.2.0
 source $HOME/BLGvenv/bin/activate
 #
 # Run the Python script
-python grid_calculation.py
+# python grid_calculation.py
+python grid-calculation.py
 
 # Check if this is the last array task
 if [ "$SLURM_ARRAY_TASK_ID" -eq $((SLURM_ARRAY_TASK_MAX)) ]; then
