@@ -1,14 +1,11 @@
-## After checking the matrices in utils/models/BLG
-The matrix M is correct. For the right hopping matrix Tx, it should actually be Tx.T , and then it would be completely correct. The way it is written right now, the matrix Tx represents hopping to the closest neighbor in the -x direction, but then this should come with a $$ e^{+ik_x} $$ instead.
+## specification of unit cell distances 
+rvals = np.array([0, 1, 2, 3, 4, 10, 11, 12, 50, 51, 52, 99, 100, 101])
 
-For the right hopping matrix Ty, the story is the same as Tx. It should actually be just the transpose of what is written there. 
-Just to clarify, as it is written now, the 'right hopping matrix' would Ty.conj().T, but this would have the sign of kx wrong in the exponential. 
+## specification of which sublattice elements they connect:
+return np.array((Gkx[0, 0], Gkx[1, 1], Gkx[1, 2], Gkx[2, 1]))
+    0: site A - A 
+    1: site B - B
+    2: site A - B
+    3: site B - A
+### I suppose we just need sites 0 and 2 for the 2imp nrg: same sublattice and different sublattice
 
-## Resolution: 
-I believe if I do a new run of the LDOS with the matrices as 
-M -> M.T and 
-Ty -> Ty.T , 
-then everything should be correct. Starting a run now.
-
-## Does this work? Seemingly yes. The LDOS is exactly correct. 
-This directory is to do a bigger run on alice
